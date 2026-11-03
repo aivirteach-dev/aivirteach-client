@@ -72,4 +72,15 @@ describe("readTutorStream", () => {
     await result;
     expect(onState.mock.calls.slice(0, 2)).toEqual([[{ kind: "diagnosing", activity: "tools" }], [{ kind: "diagnosing", activity: "validating" }]]);
   });
+  it("forwards only matching public tool events while finalizing only on complete", async () => {
+    const input = source(); const onTool = vi.fn();
+    const result = readTutorStream(input.response, { signal: new AbortController().signal, onState: vi.fn(), onTool });
+    input.send("tool_finished", progress("tool_started", { tool: "get_vm_status" }));
+    input.send("tool_started", progress("tool_started", { tool: "get_vm_status", raw_output: "private" }));
+    input.send("tool_finished", progress("tool_finished", { tool: "get_vm_status", status: "ok", duration_ms: 10, parameters: "private" }));
+    input.send("complete", complete);
+    await expect(result).resolves.toBe("persisted answer");
+    expect(onTool.mock.calls).toEqual([[{ kind: "started", tool: "get_vm_status" }], [{ kind: "finished", tool: "get_vm_status", status: "ok", durationMs: 10 }]]);
+  });
+
 });

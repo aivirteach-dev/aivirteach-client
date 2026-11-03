@@ -5,3 +5,10 @@ This product includes software developed by the AIVirTeach Project.
 
 Use, reproduction, and distribution of this software are subject to the
 Apache License, Version 2.0. See the LICENSE file for details.
+
+The Message, Message Scroller, Trace, Input Group and Textarea components in
+components/ui are adapted from shadcn/ui base-nova registry components.
+Source: https://github.com/shadcn-ui/ui (MIT License).
+Copyright (c) 2023 shadcn.
+Adaptations use local imports and Lucide icons. Input Group addon focus also
+supports textareas. Message Scroller behavior is provided by @shadcn/react.

@@ -1,3 +1,4 @@
+import { parseTutorToolEvent, type TutorToolEvent } from "./tutor-tools";
 import { parseSseStream } from "../lib/sse";
 import { parseChatStreamFrame } from "./chat-stream-frame";
 import { initialTutorReply, reduceTutorReply, type TutorReplyEvent, type TutorReplyState } from "./tutor-reply-state";
@@ -5,6 +6,7 @@ import { initialTutorReply, reduceTutorReply, type TutorReplyEvent, type TutorRe
 type TutorStreamCallbacks = {
   signal: AbortSignal;
   onState: (state: TutorReplyState) => void;
+  onTool?: (event: TutorToolEvent) => void;
 };
 
 export class TutorReplyNotSavedError extends Error {
@@ -18,7 +20,7 @@ function errorCode(raw: string): unknown {
   } catch { return undefined; }
 }
 
-export async function readTutorStream(response: Response, { signal, onState }: TutorStreamCallbacks): Promise<string> {
+export async function readTutorStream(response: Response, { signal, onState, onTool }: TutorStreamCallbacks): Promise<string> {
   if (!response.body) throw new Error("The tutor stream has no body.");
   let state = initialTutorReply;
   const dispatch = (event: TutorReplyEvent) => {
@@ -39,6 +41,8 @@ export async function readTutorStream(response: Response, { signal, onState }: T
       dispatch({ kind: "completed", text: parsed.tutorMessage.text });
       return parsed.tutorMessage.text;
     }
+    const toolEvent = parseTutorToolEvent(parsed.event, parsed.data);
+    if (toolEvent) onTool?.(toolEvent);
     switch (parsed.event) {
       case "started": case "reasoning_started": case "context_ready": dispatch({ kind: "activity", activity: "checking" }); break;
       case "tool_started": dispatch({ kind: "activity", activity: "tools" }); break;

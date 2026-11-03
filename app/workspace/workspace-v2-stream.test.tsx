@@ -47,8 +47,8 @@ function stream() {
     },
   };
 }
-function enter(input: HTMLInputElement, value: string) {
-  const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")?.set;
+function enter(input: HTMLTextAreaElement, value: string) {
+  const setter = Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, "value")?.set;
   setter?.call(input, value);
   input.dispatchEvent(new Event("input", { bubbles: true }));
 }
@@ -86,8 +86,8 @@ describe("V2 tutor stream wiring", () => {
     const run = stream();
     const request = vi.spyOn(api, "streamChatMessage").mockResolvedValue(run.response);
     await act(async () => { host.querySelector<HTMLButtonElement>('[role="tab"][aria-selected="false"]')?.click(); });
-    const form = host.querySelector<HTMLFormElement>(".message-form");
-    const input = form?.querySelector<HTMLInputElement>("input");
+    const form = host.querySelector<HTMLFormElement>(".tutor-prompt");
+    const input = form?.querySelector<HTMLTextAreaElement>("textarea");
     expect(form).not.toBeNull();
     await act(async () => { if (input) enter(input, "Help"); });
     await act(async () => { form?.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true })); });
@@ -106,8 +106,8 @@ describe("V2 tutor stream wiring", () => {
   async function submitTeacher(run: ReturnType<typeof stream>) {
     vi.spyOn(api, "streamChatMessage").mockResolvedValue(run.response);
     await act(async () => { host.querySelector<HTMLButtonElement>('[role="tab"][aria-selected="false"]')?.click(); });
-    const form = host.querySelector<HTMLFormElement>(".message-form")!;
-    const input = form.querySelector<HTMLInputElement>("input")!;
+    const form = host.querySelector<HTMLFormElement>(".tutor-prompt")!;
+    const input = form.querySelector<HTMLTextAreaElement>("textarea")!;
     await act(async () => { enter(input, "Help"); });
     await act(async () => { form.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true })); });
   }
@@ -207,8 +207,8 @@ describe("V2 tutor stream wiring", () => {
     expect(Array.from(host.querySelectorAll("button")).find(button => button.textContent === "Refreshing...")?.disabled).toBe(true);
     const next = stream();
     vi.mocked(api.streamChatMessage).mockResolvedValueOnce(next.response);
-    await act(async () => { enter(host.querySelector<HTMLInputElement>(".message-form input")!, "New question"); });
-    await act(async () => { host.querySelector(".message-form")?.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true })); });
+    await act(async () => { enter(host.querySelector<HTMLTextAreaElement>(".tutor-prompt textarea")!, "New question"); });
+    await act(async () => { host.querySelector(".tutor-prompt")?.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true })); });
     await act(async () => { next.frame("assistant_delta", { type: "progress", event: "assistant_delta", data: { delta: "New reply" } }); });
     await act(async () => { resolveHistory([]); });
     expect(host.querySelector(".message.tutor.pending")?.textContent).toContain("New reply");
@@ -225,4 +225,18 @@ describe("V2 tutor stream wiring", () => {
     expect(host.querySelector(".message.tutor.pending")).toBeNull();
     expect(run.response.body?.locked).toBe(false);
   });
+  it("renders public diagnostic tools without displaying private tool data", async () => {
+    const input = stream();
+    await submitTeacher(input);
+    await act(async () => { input.frame("tool_started", { type: "progress", event: "tool_started", data: { tool: "get_vm_status", parameters: "PRIVATE_INPUT" } }); });
+    expect(host.textContent).toContain("VM status");
+    expect(host.textContent).toContain("Running");
+    await act(async () => { input.frame("tool_finished", { type: "progress", event: "tool_finished", data: { tool: "get_vm_status", status: "ok", duration_ms: 12, raw_output: "PRIVATE_OUTPUT" } }); });
+    expect(host.textContent).toContain("12 ms");
+    expect(host.textContent).not.toContain("PRIVATE_INPUT");
+    expect(host.textContent).not.toContain("PRIVATE_OUTPUT");
+    await act(async () => { input.frame("complete", { type: "complete", studentMessage: { text: "Help" }, tutorMessage: { text: "Final" } }); input.close(); });
+    expect(host.querySelector(".tutor-tool-trace")).toBeNull();
+  });
+
 });

@@ -7,7 +7,6 @@ import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Input } from "@/components/ui/input";
 import { BrandLogo } from "../components/BrandLogo";
 import { api, ApiError, beaconStopWorkspace, getAccessToken, type ApiCourseDetail, type ApiEnrollment, type ApiWorkspace } from "../lib/api";
 import { applyLearningLanguage, localize, useLearningLanguage } from "../lib/language";
@@ -19,7 +18,9 @@ import { useBrowserNumber } from "../hooks/use-browser-number";
 import { useBrowserJson } from "../hooks/use-browser-json";
 import { useConsoleSession } from "./use-console-session";
 import { parseFloatingPosition, type FloatingPosition } from "./floating-position";
-import { TutorMessage } from "./tutor-message";
+import { TutorConversation } from "./tutor-conversation";
+import { TutorPromptInput } from "./tutor-prompt-input";
+import { reduceTutorTools, type TutorTool } from "./tutor-tools";
 import { vmPanelState } from "./vm-panel-state";
 import { hasTutorVersionMismatch, loadedTutorContext, tutorContextKey } from "./tutor-context";
 import { useCourseLearningSession } from "./use-course-learning-session";
@@ -31,7 +32,7 @@ import { useTutorRequest } from "./use-tutor-request";
 type HistoryRefresh = "idle" | "loading" | "loaded" | "failed";
 
 type TutorDisplay =
-  | { kind: "active"; key: string; reply: TutorReplyState }
+  | { kind: "active"; key: string; reply: TutorReplyState; tools: readonly TutorTool[] }
   | { kind: "interrupted"; key: string; refresh: HistoryRefresh }
   | { kind: "failed"; key: string; message: string; refresh: HistoryRefresh };
 
@@ -75,7 +76,6 @@ export function WorkspaceV2() {
   const t = (english: string, chinese: string) => localize(learningLanguage, english, chinese);
   const shellRef = useRef<HTMLDivElement>(null);
   const floatingPromptRef = useRef<HTMLTextAreaElement>(null);
-  const messagesRef = useRef<HTMLDivElement>(null);
   const consoleViewerRef = useRef<ConsoleViewerHandle>(null);
   const floatingWasDraggedRef = useRef(false);
   const [course, setCourse] = useState<ApiCourseDetail | null>(null);
@@ -88,6 +88,8 @@ export function WorkspaceV2() {
   }, [enrollmentId]);
   const formatConsolePollError = useCallback((caught: unknown) => caught instanceof Error ? caught.message : "Could not start the remote desktop.", []);
   const [activeTab, setActiveTab] = useState<WorkspaceTab>("path");
+  const teacherPanelRef = useRef<HTMLDivElement>(null);
+  const [teacherPanelInViewport, setTeacherPanelInViewport] = useState<boolean | null>(null);
   const [leftWidth, setLeftWidth] = useBrowserNumber(widthStorageKey, 680, { min: minLeftWidth, max: maxLeftWidth });
   const [layout, setLayout] = useState<WorkspaceLayout>("split");
   const [checked, setChecked] = useState(false);
@@ -117,7 +119,17 @@ export function WorkspaceV2() {
   const [savedFloatingPosition, setSavedFloatingPosition] = useBrowserJson(floatingPositionStorageKey, floatingPositionServerFallback, defaultFloatingPosition, parseFloatingPosition, clampFloatingPosition);
   const [draggedFloatingPosition, setDraggedFloatingPosition] = useState<FloatingPosition | null>(null);
   const floatingPosition = draggedFloatingPosition ?? savedFloatingPosition;
+  const hideFloatingForTeacher = teacherPanelInViewport ?? (activeTab === "teacher" && layout !== "minimized");
   const learningSession = useCourseLearningSession(course);
+
+  useEffect(() => {
+    if (activeTab !== "teacher" || layout === "minimized") return;
+    const panel = teacherPanelRef.current;
+    if (!panel || typeof IntersectionObserver === "undefined") return;
+    const observer = new IntersectionObserver(([entry]) => setTeacherPanelInViewport(entry?.isIntersecting ?? false));
+    observer.observe(panel);
+    return () => observer.disconnect();
+  }, [activeTab, layout]);
   const { messages, appendMessage, loadMessages } = useChatMessages(enrollment?.id, learningSession.progress.snapshot?.generation, initialMessages);
   const displayedLesson = learningSession.state?.status === "ready" && learningSession.state.id === learningSession.selectedId ? learningSession.state.lesson : null;
   const chatContext = loadedTutorContext(course, learningSession.selectedId, displayedLesson, learningSession.progress.snapshot);
@@ -221,11 +233,6 @@ export function WorkspaceV2() {
   }, [floatingPrompt, floatingPromptOpen]);
 
   useEffect(() => {
-    if (activeTab !== "teacher") return;
-    messagesRef.current?.scrollTo({ top: messagesRef.current.scrollHeight, behavior: "smooth" });
-  }, [activeTab, messages, tutorDraft]);
-
-  useEffect(() => {
     let active = true;
     let measuring = false;
     async function measureLatency() {
@@ -321,11 +328,12 @@ export function WorkspaceV2() {
     if (floatingOwnerId) setFloatingOwner({ id: floatingOwnerId, contextKey: chatKey });
     appendMessage({ role: "student", text });
     try {
-      setTutorDisplay({ kind: "active", key: chatKey, reply: initialTutorReply });
+      setTutorDisplay({ kind: "active", key: chatKey, reply: initialTutorReply, tools: [] });
       const response = await api.streamChatMessage(enrollment.id, { requestId: crypto.randomUUID(), text, context: chatContext }, request.signal);
       const tutorText = await readTutorStream(response, {
         signal: request.signal,
-        onState(reply) { if (request.isCurrent()) setTutorDisplay({ kind: "active", key: chatKey, reply }); },
+        onState(reply) { if (request.isCurrent()) setTutorDisplay((current) => current?.kind === "active" && current.key === chatKey ? { ...current, reply } : current); },
+        onTool(event) { if (request.isCurrent()) setTutorDisplay((current) => current?.kind === "active" && current.key === chatKey ? { ...current, tools: reduceTutorTools(current.tools, event) } : current); },
       });
       if (request.isCurrent()) { appendMessage({ role: "tutor", text: tutorText }); setTutorDisplay(null); }
     } catch (caught) {
@@ -502,9 +510,12 @@ export function WorkspaceV2() {
         </header>
 
         {activeTab === "teacher" ? (
-          <div className="lab-v2-teacher" role="tabpanel">
+          <div className="lab-v2-teacher" role="tabpanel" ref={teacherPanelRef}>
             <header><div className="tutor-heading"><span className="bot-mark">AI</span><div><strong>AIVir Teacher</strong><small><i /> {t("Online", "在线")}</small></div></div><p>{course.title}</p></header>
-            <div ref={messagesRef} className="messages">{messages.map((item, index) => <article className={`message ${item.role}`} key={`${item.role}-${index}`}><div>{item.role === "tutor" ? <TutorMessage text={item.text} /> : <p>{item.text}</p>}<small>{index === messages.length - 1 ? t("Just now", "刚刚") : t("Earlier", "较早")}</small></div></article>)}{pendingReply && <article className="message tutor pending"><div><p role="status">{tutorReplyStatus(pendingReply, t)}</p>{tutorDraft && <TutorMessage text={tutorDraft} />}</div></article>}{currentTutorDisplay?.kind === "failed" && <p role="alert">{currentTutorDisplay.message}</p>}{currentTutorDisplay?.kind === "interrupted" && <p role="status">{t("Stopped receiving this reply. The tutor may continue and save it. Refresh the conversation to check; if the reply is not ready, check again later.", "已停止接收本次回复。后台可能继续处理并保存，请刷新对话查看；若回复尚未保存，请稍后再查看。")}</p>}</div>
+            <TutorConversation key={chatKey} messages={messages} pending={!!pendingReply} status={pendingReply ? tutorReplyStatus(pendingReply, t) : ""} draft={tutorDraft} tools={currentTutorDisplay?.kind === "active" ? currentTutorDisplay.tools : []}>
+              {currentTutorDisplay?.kind === "failed" && <p role="alert">{currentTutorDisplay.message}</p>}
+              {currentTutorDisplay?.kind === "interrupted" && <p role="status">{t("Stopped receiving this reply. The tutor may continue and save it. Refresh the conversation to check; if the reply is not ready, check again later.", "已停止接收本次回复。后台可能继续处理并保存，请刷新对话查看；若回复尚未保存，请稍后再查看。")}</p>}
+            </TutorConversation>
             {(currentTutorDisplay?.kind === "interrupted" || currentTutorDisplay?.kind === "failed") && <div>
               <Button variant="outline" type="button" disabled={currentTutorDisplay.refresh === "loading"} onClick={() => void refreshConversation()}>{currentTutorDisplay.refresh === "loading" ? t("Refreshing...", "正在刷新……") : t("Refresh conversation", "刷新对话")}</Button>
               {currentTutorDisplay.refresh === "loaded" && <p role="status">{t("Conversation refreshed. If the reply is not ready, check again later.", "对话已刷新。若回复尚未保存，请稍后再查看。")}</p>}
@@ -512,7 +523,7 @@ export function WorkspaceV2() {
             </div>}
             {chat.busy && <Button variant="outline" type="button" onClick={() => { chat.cancel(); setTutorDisplay({ kind: "interrupted", key: chatKey, refresh: "idle" }); setFloatingOwner(null); }}>{t("Stop receiving", "停止接收")}</Button>}
             {tutorVersionMismatch && <Alert variant="destructive">{t("This lesson does not match the active course version. Reload the course before asking the tutor.", "当前课时与课程版本不匹配，请刷新课程后再向教师提问。")}<Button variant="outline" type="button" onClick={() => window.location.reload()}>{t("Reload course", "刷新课程")}</Button></Alert>}
-            <form className="message-form" onSubmit={sendMessage}><Input value={message} onChange={(event) => setMessage(event.target.value)} aria-label={t("Ask AIVir Teacher", "向 AIVir Teacher 提问")} placeholder={t("Ask about this course step...", "询问此课程步骤……")} disabled={!chatContext || chat.busy} /><Button type="submit" disabled={!chatContext || chat.busy}>{chat.busy ? t("Sending...", "发送中……") : t("Send", "发送")}</Button></form>
+            <TutorPromptInput value={message} onChange={setMessage} onSubmit={sendMessage} disabled={!chatContext} busy={chat.busy} />
           </div>
         ) : (
           <div className="lab-v2-path" role="tabpanel">
@@ -543,7 +554,7 @@ export function WorkspaceV2() {
         </DialogContent>
       </Dialog>
 
-      <div className="floating-ai" style={{ left: floatingPosition.x, top: floatingPosition.y }}>
+      <div className="floating-ai" data-active-tab={activeTab} data-layout={layout} data-teacher-visible={hideFloatingForTeacher} style={{ left: floatingPosition.x, top: floatingPosition.y }}>
         {floatingPromptOpen && (
           <form className={`floating-ai-prompt ${floatingPosition.y < 130 ? "expand-down" : ""}`} onSubmit={sendFloatingPrompt}>
             <textarea ref={floatingPromptRef} rows={1} value={floatingPrompt} onChange={(event) => setFloatingPrompt(event.target.value)} onKeyDown={handleFloatingPromptKeyDown} placeholder={t("\u00A0\u00A0Ask AIVirTeach...", "\u00A0\u00A0向 AIVirTeach 提问……")} aria-label={t("Ask AIVirTeach", "向 AIVirTeach 提问")} disabled={!chatContext || chat.busy} />

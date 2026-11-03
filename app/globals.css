@@ -3128,6 +3128,10 @@ html .floating-ai-prompt textarea:is(:focus, :focus-visible) {
   .left-maximized .lab-v2-left { height: 100vh; }
 }
 
+@media (max-width: 600px) {
+  .floating-ai[data-active-tab="teacher"][data-teacher-visible="true"]:not([data-layout="minimized"]) { display: none; }
+}
+
 /* Shared tutor content for both workspace layouts. */
 .message.tutor > div { min-width: 0; max-width: 100%; }
 .tutor-markdown { min-width: 0; line-height: 1.65; overflow-wrap: anywhere; }
@@ -3168,3 +3172,23 @@ html[data-ui-customized="true"] body .learning-path-button[data-slot="button"]:f
 html body .learning-path-button[data-slot="button"]:disabled { box-shadow: none; }
 html body .lesson-progress .lesson-completion-button.learning-path-button { height: auto; min-height: var(--ui-learning-path-button-height, 42px); }
 @media (max-width: 480px) { .lesson-progress { margin: 16px; padding: 16px; } }
+
+.tutor-conversation { flex: 1; min-height: 0; height: auto; }
+.tutor-conversation-content { padding: 20px 16px; gap: 22px; }
+.tutor-conversation .message { margin: 0; }
+.tutor-conversation .message.student { justify-content: flex-start; }
+.tutor-conversation .message.student > [data-slot="message-content"] { width: fit-content; max-width: 82%; align-items: flex-end; }
+.tutor-conversation .message.student p { margin: 0; padding: 10px 14px; white-space: pre-wrap; }
+.tutor-conversation .message.tutor > [data-slot="message-content"] { width: 100%; }
+.tutor-conversation [data-slot="message-scroller-button"] { z-index: 2; border: 1px solid var(--outline); }
+.tutor-reply-status { color: var(--muted-foreground); font-size: 12px; }
+.tutor-tool-trace { margin-block: 8px; padding: 10px; border: 1px solid var(--outline); background: var(--surface-low); }
+.tutor-tool-trace [data-slot="trace-line"] { width: 100%; font-size: 12px; flex-wrap: wrap; }
+.tutor-tool-trace [data-slot="trace-title"] { display: inline-flex; align-items: center; gap: 5px; }
+.tutor-tool-icon { width: 13px; height: 13px; }
+.tutor-prompt { padding: 12px 16px; border-top: 1px solid var(--outline); background: var(--surface-low); }
+.tutor-prompt [data-slot="input-group"] { border-color: var(--outline); }
+.tutor-prompt textarea { min-height: 44px; max-height: 160px; overflow-y: auto; font-size: 14px; }
+.tutor-prompt [data-slot="input-group-addon"] { justify-content: space-between; }
+.tutor-input-hint { color: var(--muted-foreground); font-size: 10px; font-weight: normal; }
+@media (max-width: 600px) { .tutor-input-hint { display: none; } .tutor-prompt [data-slot="input-group-addon"] { justify-content: flex-end; } }
