@@ -19,7 +19,7 @@ export function ThemeToggle() {
   const nextTheme = theme === "dark" ? "light" : "dark";
 
   return (
-    <Button className="auth-theme-toggle" variant="ghost" size="icon" type="button" onClick={toggleTheme} aria-label={`Switch to ${nextTheme} theme`} title={`Switch to ${nextTheme} theme`}>
+    <Button className="auth-theme-toggle" data-ui-role="auth-theme-toggle" variant="ghost" size="icon" type="button" onClick={toggleTheme} aria-label={`Switch to ${nextTheme} theme`} title={`Switch to ${nextTheme} theme`}>
       <span className={theme === "dark" ? "theme-sun" : "theme-moon"} aria-hidden="true" />
     </Button>
   );

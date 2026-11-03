@@ -41,10 +41,10 @@ export function TopbarSearch() {
         <SearchIcon aria-hidden="true" />
       </PopoverTrigger>
       <PopoverContent className="topbar-search-popover" align="end" sideOffset={19}>
-        <form className="search-box topbar-search-popover-form" role="search" onSubmit={submitSearch}>
+        <form className="search-box topbar-search-popover-form" data-ui-role="search-capsule" role="search" onSubmit={submitSearch}>
           <Input autoFocus aria-label={t("Search courses and skills", "搜索课程和技能")} placeholder={t("Enter to search...", "输入内容进行搜索……")} value={query} onChange={(event) => { setQuery(event.target.value); setFeedback(""); }} />
         </form>
-        {feedback && <output className="search-feedback" aria-live="polite">{feedback}</output>}
+        {feedback && <output className="search-feedback" data-ui-role="search-feedback" aria-live="polite">{feedback}</output>}
       </PopoverContent>
     </Popover>
   );

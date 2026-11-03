@@ -2,17 +2,38 @@ import * as React from "react"
 import { cn } from "@/lib/utils"
 
 type CardElement = "div" | "article" | "section" | "aside" | "header"
+export type CardUiRole =
+  | "app-topbar"
+  | "auth-form"
+  | "dashboard-course"
+  | "dashboard-stat"
+  | "catalog-course"
+  | "course-welcome"
+  | "course-required"
+  | "demo-course-outline"
+  | "demo-course-lesson"
+  | "analytics-metric"
+  | "analytics-chart"
+  | "analytics-achievement"
+  | "analytics-v2-course"
+  | "analytics-v2-weekly"
+  | "analytics-v2-insight"
+  | "settings-row"
+  | "profile-form"
+  | "theme-preview"
 
 function Card({
   as: Component = "div",
   className,
   size = "default",
+  uiRole,
   ...props
-}: React.HTMLAttributes<HTMLElement> & { as?: CardElement; size?: "default" | "sm" }) {
+}: React.HTMLAttributes<HTMLElement> & { as?: CardElement; size?: "default" | "sm"; uiRole?: CardUiRole }) {
   return (
     <Component
       data-slot="card"
       data-size={size}
+      data-ui-role={uiRole}
       className={cn(
         "group/card flex flex-col gap-(--card-spacing) overflow-hidden rounded-xl bg-card py-(--card-spacing) text-sm text-card-foreground ring-1 ring-foreground/10 [--card-spacing:--spacing(4)] has-data-[slot=card-footer]:pb-0 has-[>img:first-child]:pt-0 data-[size=sm]:[--card-spacing:--spacing(3)] data-[size=sm]:has-data-[slot=card-footer]:pb-0 *:[img:first-child]:rounded-t-xl *:[img:last-child]:rounded-b-xl",
         className

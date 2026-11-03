@@ -71,21 +71,21 @@ export default function PythonBasicsCoursePage() {
           </div>
         </header>
 
-        <section className="mock-course-progress" aria-label={`${completion}% course completion`}>
+        <section className="mock-course-progress" data-ui-role="course-progress" aria-label={`${completion}% course completion`}>
           <Progress className="mock-course-progress-track" value={completion} aria-label={`${completion}% course completion`} />
           <strong>{t(`${progress.completedLessonIds.length} of ${mockCourseLessons.length} lessons complete`, `已完成 ${progress.completedLessonIds.length}/${mockCourseLessons.length} 节课程`)}</strong>
           <span>{completion}%</span>
         </section>
 
         <div className="mock-course-layout">
-          <Card as="aside" className="mock-course-outline" aria-label="Course lessons">
+          <Card as="aside" className="mock-course-outline" uiRole="demo-course-outline" aria-label="Course lessons">
             <header><span>{t("COURSE OUTLINE", "课程大纲")}</span><strong>{t("Python foundations", "Python 基础")}</strong></header>
             <ol>
               {mockCourseLessons.map((item, index) => {
                 const complete = progress.completedLessonIds.includes(item.id);
                 return (
                   <li key={item.id}>
-                    <Button variant="ghost" className={`${index === lessonIndex ? "active" : ""} ${complete ? "complete" : ""}`} type="button" onClick={() => selectLesson(index)} aria-current={index === lessonIndex ? "step" : undefined}>
+                    <Button variant="ghost" data-ui-role="course-lesson-option" data-ui-complete={complete} className={`${index === lessonIndex ? "active" : ""} ${complete ? "complete" : ""}`} type="button" onClick={() => selectLesson(index)} aria-current={index === lessonIndex ? "step" : undefined}>
                       <span>{complete ? "✓" : item.number}</span>
                       <div><small>{t(`Lesson ${item.number}`, `第 ${item.number} 课`)}</small><strong>{item.title}</strong></div>
                     </Button>
@@ -96,24 +96,25 @@ export default function PythonBasicsCoursePage() {
             <div className="mock-course-local-note"><span aria-hidden="true">i</span><p><strong>{t("Saved locally", "保存在本地")}</strong>{t("Your activity stays in this browser and feeds Analytics V2.", "你的活动保存在此浏览器中，并用于分析 V2。")}</p></div>
           </Card>
 
-          <Card as="article" className="mock-course-lesson">
+          <Card as="article" className="mock-course-lesson" uiRole="demo-course-lesson">
             <header>
               <div><span>LESSON {lesson.number} · {lesson.skill.toUpperCase()}</span><h2>{lesson.title}</h2><p>{lesson.objective}</p></div>
-              {lessonComplete && <Badge className="mock-lesson-complete">{t("Completed", "已完成")}</Badge>}
+              {lessonComplete && <Badge className="mock-lesson-complete" data-ui-tone="success">{t("Completed", "已完成")}</Badge>}
             </header>
 
             <section className="mock-course-concept">
               <h3>{t("Understand the idea", "理解概念")}</h3>
               <p>{lesson.explanation}</p>
-              <div className="mock-code-example"><header><span>python</span><i /><i /><i /></header><pre><code>{lesson.code}</code></pre></div>
+              <div className="mock-code-example" data-ui-role="code-surface"><header><span>python</span><i /><i /><i /></header><pre><code>{lesson.code}</code></pre></div>
             </section>
 
-            <section className="mock-course-challenge" aria-labelledby="mock-challenge-title">
+            <section className="mock-course-challenge" data-ui-role="course-challenge" aria-labelledby="mock-challenge-title">
               <div className="mock-course-challenge-heading"><span>{t("CHECK YOUR UNDERSTANDING", "检查你的理解")}</span><h3 id="mock-challenge-title">{lesson.prompt}</h3></div>
               <div className="mock-answer-list" role="radiogroup" aria-label="Answer choices">
                 {lesson.choices.map((choice, index) => (
                   <Button
                     variant="outline"
+                    data-ui-role="course-quiz-option"
                     className={selectedAnswer === index ? "selected" : ""}
                     type="button"
                     role="radio"
@@ -127,7 +128,7 @@ export default function PythonBasicsCoursePage() {
               </div>
 
               {feedback && (
-                <div className={`mock-answer-feedback ${feedback}`} role="status">
+                <div className={`mock-answer-feedback ${feedback}`} data-ui-role="course-feedback" role="status">
                   <strong>{feedback === "correct" ? t("Correct", "正确") : t("Not quite", "还不完全正确")}</strong>
                   <p>{feedback === "correct" ? lesson.answerExplanation : t("Review the example, choose another answer, and try again.", "复习示例，选择另一个答案后重试。")}</p>
                 </div>

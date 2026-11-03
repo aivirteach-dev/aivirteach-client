@@ -62,7 +62,7 @@ export default function CreateAccountPage() {
           <h1 id="create-account-title">{isLocal ? t("Create a local demo account", "创建本地演示账户") : t("Activate your learner account", "激活学习者账户")}</h1>
           <p>{isLocal ? t("Create a development profile in your local backend.", "在本地后端创建开发资料。") : t("Use the one-time invitation token supplied by AIVirTeach.", "使用 AIVirTeach 提供的一次性邀请码。")}</p>
         </header>
-        <Card className="login-card">
+        <Card className="login-card" uiRole="auth-form">
           <form onSubmit={submit}>
             {isLocal ? <>
               <Label htmlFor="name">{t("Full name", "姓名")}</Label>
@@ -81,7 +81,7 @@ export default function CreateAccountPage() {
               <Label className="remember signup-terms"><Checkbox required /> <span>{t("I agree to the Terms and Privacy Policy", "我同意条款和隐私政策")}</span></Label>
             </>}
             {error && <Alert className="auth-error" variant="destructive">{error}</Alert>}
-            <Button className="primary-button login-submit" size="lg" type="submit" disabled={submitting}>{submitting ? (isLocal ? t("Creating account…", "正在创建账户……") : t("Activating account…", "正在激活账户……")) : (isLocal ? t("Create demo account", "创建演示账户") : t("Activate account", "激活账户"))}</Button>
+            <Button className="primary-button login-submit" size="lg" type="submit" disabled={submitting} aria-busy={submitting}>{submitting ? (isLocal ? t("Creating account…", "正在创建账户……") : t("Activating account…", "正在激活账户……")) : (isLocal ? t("Create demo account", "创建演示账户") : t("Activate account", "激活账户"))}</Button>
           </form>
         </Card>
         <p className="signup-copy">{isLocal ? t("Already have a demo profile?", "已有演示资料？") : t("Already activated?", "已经激活？")} <Button render={<Link href="/login" />} className="text-button" variant="link">{t("Log in", "登录")}</Button></p>

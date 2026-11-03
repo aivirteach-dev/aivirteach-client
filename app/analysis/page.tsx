@@ -34,15 +34,15 @@ export default function AnalysisPage() {
           <div><h1>{t("Learning Analytics", "学习分析")}</h1><p>{t("Track your mastery and learning progression.", "追踪你的掌握程度和学习进展。")}</p></div>
           <div className="analysis-head-actions">
             <div className="range-toggle" aria-label="Analytics date range">
-              <Button variant="ghost" type="button" className={range === "30" ? "active" : ""} onClick={() => setRange("30")}>{t("Last 30 Days", "最近 30 天")}</Button>
-              <Button variant="ghost" type="button" className={range === "all" ? "active" : ""} onClick={() => setRange("all")}>{t("All Time", "全部时间")}</Button>
+              <Button variant="ghost" type="button" data-ui-role="range-option" aria-pressed={range === "30"} className={range === "30" ? "active" : ""} onClick={() => setRange("30")}>{t("Last 30 Days", "最近 30 天")}</Button>
+              <Button variant="ghost" type="button" data-ui-role="range-option" aria-pressed={range === "all"} className={range === "all" ? "active" : ""} onClick={() => setRange("all")}>{t("All Time", "全部时间")}</Button>
             </div>
           </div>
         </header>
 
         <section className="metric-grid">
           {metrics.map((metric) => (
-            <Card as="article" className="metric-card" key={metric.label}>
+            <Card as="article" className="metric-card" uiRole="analytics-metric" data-ui-tone={metric.id} key={metric.id}>
               <div className="metric-top"><span className={`metric-icon ${metric.tone}`}>{metric.icon}</span><Badge className="delta" variant="outline">{metric.delta}</Badge></div>
               <span className="metric-label">{metric.label}</span><strong>{metric.value}</strong>
               {metric.id === "goal" && <Progress className="progress-track slim" value={profile.stats.weeklyGoalPercent} aria-label={t(`${profile.stats.weeklyGoalPercent}% weekly goal`, `每周目标完成 ${profile.stats.weeklyGoalPercent}%`)} />}
@@ -51,11 +51,11 @@ export default function AnalysisPage() {
         </section>
 
         <section className="analytics-layout">
-          <Card as="article" className="chart-card">
+          <Card as="article" className="chart-card" uiRole="analytics-chart">
             <h2>{t("Weekly Learning Hours", "每周学习时长")}</h2>
             <div className="weekly-chart" role="img" aria-label={`Learning hours from Monday to Sunday: ${profile.weeklyHours.join(", ")} hours`}>
               <div className="weekly-chart-scale" aria-hidden="true"><span>{maxWeeklyHours}h</span><span>{maxWeeklyHours / 2}h</span><span>0h</span></div>
-              <div className="weekly-chart-plot">
+              <div className="weekly-chart-plot" data-ui-role="analytics-plot">
                 <div className="weekly-chart-lines" aria-hidden="true"><i /><i /><i /></div>
                 {profile.weeklyHours.map((hours, index) => (
                   <div className="weekly-bar-column" key={days[index]} title={`${days[index]}: ${hours} hours`}>
@@ -70,7 +70,7 @@ export default function AnalysisPage() {
 
         </section>
 
-        <section className="achievements"><h2>{t("Recent Achievements", "近期成就")}</h2><div className="achievement-row">{profile.achievements.map((achievement) => <Card as="article" className={achievement.unlocked ? "" : "locked"} key={achievement.title}><span>{achievement.icon}</span><div><strong>{achievement.title}</strong><small>{achievement.subtitle}</small></div></Card>)}</div></section>
+        <section className="achievements"><h2>{t("Recent Achievements", "近期成就")}</h2><div className="achievement-row">{profile.achievements.map((achievement, index) => <Card as="article" className={achievement.unlocked ? "" : "locked"} uiRole="analytics-achievement" data-ui-tone={index + 1} key={achievement.title}><span>{achievement.icon}</span><div><strong>{achievement.title}</strong><small>{achievement.subtitle}</small></div></Card>)}</div></section>
       </main>
     </div>
   );

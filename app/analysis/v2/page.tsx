@@ -58,10 +58,10 @@ export default function AnalysisV2Page() {
     : profile.achievements;
 
   const metrics = [
-    { label: t("Practice time", "练习时间"), value: `${practiceHours}h`, detail: hasMockCourseData ? t("Tracked in this browser", "在此浏览器中记录") : t(`+${profile.analytics.practiceTrend}% from before`, `较之前 +${profile.analytics.practiceTrend}%`), tone: "blue" },
-    { label: t("Tasks completed", "已完成任务"), value: String(tasksCompleted), detail: hasMockCourseData ? t(`${mockProgress.attempts} total attempts`, `共尝试 ${mockProgress.attempts} 次`) : t(`+${profile.analytics.taskTrend}% from before`, `较之前 +${profile.analytics.taskTrend}%`), tone: "violet" },
-    { label: t("Current streak", "连续学习"), value: `${streakDays}d`, detail: t("Keep the rhythm going", "保持学习节奏"), tone: "amber" },
-    { label: t("Skills mastered", "已掌握技能"), value: String(skillsMastered), detail: t(`${hasMockCourseData ? mockSkills.length : profile.skills.length} skill areas tracked`, `正在追踪 ${hasMockCourseData ? mockSkills.length : profile.skills.length} 个技能领域`), tone: "cyan" },
+    { id: "practice", label: t("Practice time", "练习时间"), value: `${practiceHours}h`, detail: hasMockCourseData ? t("Tracked in this browser", "在此浏览器中记录") : t(`+${profile.analytics.practiceTrend}% from before`, `较之前 +${profile.analytics.practiceTrend}%`), tone: "blue" },
+    { id: "tasks", label: t("Tasks completed", "已完成任务"), value: String(tasksCompleted), detail: hasMockCourseData ? t(`${mockProgress.attempts} total attempts`, `共尝试 ${mockProgress.attempts} 次`) : t(`+${profile.analytics.taskTrend}% from before`, `较之前 +${profile.analytics.taskTrend}%`), tone: "violet" },
+    { id: "goal", label: t("Current streak", "连续学习"), value: `${streakDays}d`, detail: t("Keep the rhythm going", "保持学习节奏"), tone: "amber" },
+    { id: "skills", label: t("Skills mastered", "已掌握技能"), value: String(skillsMastered), detail: t(`${hasMockCourseData ? mockSkills.length : profile.skills.length} skill areas tracked`, `正在追踪 ${hasMockCourseData ? mockSkills.length : profile.skills.length} 个技能领域`), tone: "cyan" },
   ];
 
   return (
@@ -79,13 +79,13 @@ export default function AnalysisV2Page() {
           <div className="analysis-v2-head-actions">
             <Button render={<Link href="/analysis" />} variant="ghost">{t("Classic view", "经典视图")}</Button>
             <div className="analysis-v2-range" aria-label="Analytics date range">
-              <Button variant="ghost" className={range === "30" ? "active" : ""} type="button" onClick={() => setRange("30")}>{t("30 days", "30 天")}</Button>
-              <Button variant="ghost" className={range === "all" ? "active" : ""} type="button" onClick={() => setRange("all")}>{t("All time", "全部时间")}</Button>
+              <Button variant="ghost" data-ui-role="range-option" aria-pressed={range === "30"} className={range === "30" ? "active" : ""} type="button" onClick={() => setRange("30")}>{t("30 days", "30 天")}</Button>
+              <Button variant="ghost" data-ui-role="range-option" aria-pressed={range === "all"} className={range === "all" ? "active" : ""} type="button" onClick={() => setRange("all")}>{t("All time", "全部时间")}</Button>
             </div>
           </div>
         </header>
 
-        <Card as="section" className="analysis-v2-course" aria-labelledby="analysis-v2-course-title">
+        <Card as="section" className="analysis-v2-course" uiRole="analytics-v2-course" aria-labelledby="analysis-v2-course-title">
           <div className="analysis-v2-course-copy">
             <span>{course.category}</span>
             <h2 id="analysis-v2-course-title">{course.title}</h2>
@@ -104,7 +104,7 @@ export default function AnalysisV2Page() {
 
         <section className="analysis-v2-metrics" aria-label="Learning outcomes">
           {metrics.map((metric) => (
-            <Card as="article" key={metric.label}>
+            <Card as="article" uiRole="analytics-metric" data-ui-tone={metric.id} key={metric.id}>
               <span className={`analysis-v2-metric-mark ${metric.tone}`} aria-hidden="true" />
               <div><span>{metric.label}</span><strong>{metric.value}</strong><small>{metric.detail}</small></div>
             </Card>
@@ -112,12 +112,12 @@ export default function AnalysisV2Page() {
         </section>
 
         <section className="analysis-v2-main-grid">
-          <Card as="article" className="analysis-v2-panel analysis-v2-weekly">
+          <Card as="article" className="analysis-v2-panel analysis-v2-weekly" uiRole="analytics-v2-weekly">
             <header>
               <div><span className="analysis-v2-label">{t("THIS WEEK", "本周")}</span><h2>{t("Learning activity", "学习活动")}</h2></div>
               <div><strong>{weeklyTotal}h</strong><span>{t("Total practice", "总练习时长")}</span></div>
             </header>
-            <div className="analysis-v2-chart" role="img" aria-label={`Learning hours from Monday to Sunday: ${weeklyHours.join(", ")} hours`}>
+            <div className="analysis-v2-chart" data-ui-role="analytics-plot" role="img" aria-label={`Learning hours from Monday to Sunday: ${weeklyHours.join(", ")} hours`}>
               {weeklyHours.map((hours, index) => (
                 <div className={`analysis-v2-bar-column ${index === bestDayIndex ? "best" : ""}`} key={days[index]} title={`${days[index]}: ${hours} hours`}>
                   <span>{hours ? `${hours}h` : "0"}</span>
@@ -130,7 +130,7 @@ export default function AnalysisV2Page() {
           </Card>
 
           <aside className="analysis-v2-side">
-            <Card as="article" className="analysis-v2-insight">
+            <Card as="article" className="analysis-v2-insight" uiRole="analytics-v2-insight">
               <header><span aria-hidden="true">AI</span><div><small>{t("PERSONAL INSIGHT", "个人洞察")}</small><strong>{t("Recommended focus", "建议重点")}</strong></div></header>
               <p>{analyticsInsight}</p>
               {insightExpanded && <p className="analysis-v2-insight-detail">{analyticsInsightDetail}</p>}
@@ -143,7 +143,7 @@ export default function AnalysisV2Page() {
           <header><div><span className="analysis-v2-label">{t("MILESTONES", "里程碑")}</span><h2>{t("Achievements", "成就")}</h2></div><span>{t(`${achievements.filter((achievement) => achievement.unlocked).length} of ${achievements.length} unlocked`, `已解锁 ${achievements.filter((achievement) => achievement.unlocked).length}/${achievements.length}`)}</span></header>
           <div>
             {achievements.map((achievement, index) => (
-              <Card as="article" className={achievement.unlocked ? "unlocked" : "locked"} key={achievement.title}>
+              <Card as="article" className={achievement.unlocked ? "unlocked" : "locked"} uiRole="analytics-achievement" data-ui-tone={index + 1} key={achievement.title}>
                 <span aria-hidden="true">{achievement.unlocked ? "✓" : index + 1}</span>
                 <div><strong>{achievement.title}</strong><small>{achievement.subtitle}</small></div>
               </Card>

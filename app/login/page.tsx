@@ -57,12 +57,12 @@ export default function LoginPage() {
           <BrandLogo className="login-logo" />
           <h1 id="login-title">{t("Turn AI Learners into AI Builders", "让 AI 学习者成为 AI 创造者")}</h1>
         </header>
-        <Card className="login-card">
+        <Card className="login-card" uiRole="auth-form">
           {isLocal && <div className="demo-account-picker">
             <div className="demo-account-heading"><strong>{t("Choose a local demo account", "选择本地演示账户")}</strong><span>{t("No server password is needed", "无需服务器密码")}</span></div>
             <div className="demo-account-options" role="group" aria-label={t("Demo account", "演示账户")}>
               {mockLearners.map((learner) => (
-                <Button variant="outline" className={selectedProfileId === learner.id ? "selected" : ""} type="button" key={learner.id} onClick={() => setSelectedProfileId(learner.id)} aria-pressed={selectedProfileId === learner.id}>
+                <Button variant="outline" data-ui-role="auth-demo-option" className={selectedProfileId === learner.id ? "selected" : ""} type="button" key={learner.id} onClick={() => setSelectedProfileId(learner.id)} aria-pressed={selectedProfileId === learner.id}>
                   <strong>{learner.accountType === "all-clear" ? "All clear" : learner.accountType[0].toUpperCase() + learner.accountType.slice(1)}</strong>
                   <span>{learner.name}</span>
                 </Button>
@@ -78,6 +78,7 @@ export default function LoginPage() {
                 <Input id="password" name="password" type={showPassword ? "text" : "password"} autoComplete="current-password" required />
                 <Button
                   className="password-toggle"
+                  data-ui-role="auth-password-toggle"
                   variant="ghost"
                   size="icon"
                   type="button"
@@ -92,11 +93,11 @@ export default function LoginPage() {
               <Label className="remember"><Checkbox name="remember" checked={rememberMe} onCheckedChange={setRememberMe} /> <span>{t("Remember me", "记住我")}</span></Label>
             </>}
             {error && <Alert className="auth-error" variant="destructive">{error}</Alert>}
-            <Button className="primary-button login-submit" size="lg" type="submit" disabled={submitting}>{submitting ? t("Logging in…", "正在登录……") : isLocal ? t("Open local demo", "打开本地演示") : t("Log in", "登录")}</Button>
+            <Button className="primary-button login-submit" size="lg" type="submit" disabled={submitting} aria-busy={submitting}>{submitting ? t("Logging in…", "正在登录……") : isLocal ? t("Open local demo", "打开本地演示") : t("Log in", "登录")}</Button>
           </form>
           {!isLocal && <div className="provider-actions" aria-label={t("Alternative sign-in options", "其他登录方式")}>
-            <Button className="provider-button" variant="outline" type="button" disabled><span className="google-g">G</span> Google</Button>
-            <Button className="provider-button" variant="outline" type="button" disabled><span aria-hidden="true">▥</span> {t("Institutional", "机构登录")}</Button>
+            <Button className="provider-button" data-ui-role="auth-provider" variant="outline" type="button" disabled><span className="google-g">G</span> Google</Button>
+            <Button className="provider-button" data-ui-role="auth-provider" variant="outline" type="button" disabled><span aria-hidden="true">▥</span> {t("Institutional", "机构登录")}</Button>
           </div>}
         </Card>
         {isLocal

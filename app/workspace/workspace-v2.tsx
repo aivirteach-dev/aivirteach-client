@@ -2,14 +2,13 @@
 
 import { useRouter } from "next/navigation";
 import { type CSSProperties, type FormEvent, type KeyboardEvent, type PointerEvent as ReactPointerEvent, useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
-import { Check, Maximize2, Minimize2, Send, Wifi, WifiOff } from "lucide-react";
+import { Maximize2, Minimize2, Send, Wifi, WifiOff } from "lucide-react";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { BrandLogo } from "../components/BrandLogo";
 import { api, ApiError, beaconStopWorkspace, getAccessToken, type ApiCourseDetail, type ApiEnrollment, type ApiWorkspace } from "../lib/api";
-import { applyLearningLanguage, localize, useLearningLanguage } from "../lib/language";
+import { localize, useLearningLanguage } from "../lib/language";
 import { ConsoleViewer, type ConsoleViewerHandle } from "./console-viewer";
 import { heartbeatIntervalMs, isHeartbeatDue } from "./heartbeat";
 import { upstreamErrorMessage } from "./upstream-error";
@@ -111,7 +110,7 @@ export function WorkspaceV2() {
   const [stopping, setStopping] = useState(false);
   const [resumeError, setResumeError] = useState("");
   const [latency, setLatency] = useState<number | null>(null);
-  const [envVariablesOpen, setEnvVariablesOpen] = useState(false);
+  const [exitDialogOpen, setExitDialogOpen] = useState(false);
   const [floatingPromptOpen, setFloatingPromptOpen] = useState(false);
   const [floatingPrompt, setFloatingPrompt] = useState("");
   const [floatingOwner, setFloatingOwner] = useState<{ id: string; contextKey: string } | null>(null);
@@ -483,20 +482,9 @@ export function WorkspaceV2() {
     <div ref={shellRef} className={`lab-v2-shell ${layout === "maximized" ? "left-maximized" : layout === "minimized" ? "left-minimized" : ""}`} style={frameStyle}>
       <section className="lab-v2-left" aria-label={t("Learning workspace", "学习工作区")}>
         <header className="lab-v2-header">
-          <DropdownMenu>
-            <DropdownMenuTrigger render={<Button className="lab-v2-logo-trigger" variant="ghost" size="icon" type="button" aria-label={t("Open Learning Lab menu", "打开学习实验室菜单")} />}>
-              <BrandLogo className="lab-v2-logo" />
-            </DropdownMenuTrigger>
-            <DropdownMenuContent className="lab-v2-workspace-menu" align="start" side="bottom" sideOffset={8}>
-              <div className="lab-v2-menu-label">{t("Language", "语言")}</div>
-              <DropdownMenuItem onClick={() => applyLearningLanguage("en")} aria-current={learningLanguage === "en" ? "true" : undefined}>{learningLanguage === "en" && <Check aria-hidden="true" />}<span>English</span></DropdownMenuItem>
-              <DropdownMenuItem onClick={() => applyLearningLanguage("zh-CN")} aria-current={learningLanguage === "zh-CN" ? "true" : undefined}>{learningLanguage === "zh-CN" && <Check aria-hidden="true" />}<span>简体中文</span></DropdownMenuItem>
-              <div className="lab-v2-menu-separator" />
-              <DropdownMenuItem variant="destructive" onClick={() => router.push("/dashboard")}>{t("Exit", "退出")}</DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setEnvVariablesOpen(true)}>{t("Env Variables", "环境变量")}</DropdownMenuItem>
-              <DropdownMenuItem disabled>{t("Settings", "设置")}</DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <button className="lab-v2-logo-trigger" type="button" onClick={() => setExitDialogOpen(true)} data-active={exitDialogOpen ? "true" : undefined} aria-label={t("Leave Learning Lab", "退出学习实验室")} aria-haspopup="dialog">
+            <BrandLogo className="lab-v2-logo" />
+          </button>
           <div className="lab-v2-tabs" role="tablist" aria-label={t("Learning workspace views", "学习工作区视图")}>
             <Button variant="ghost" type="button" role="tab" aria-selected={activeTab === "teacher"} onClick={() => setActiveTab("teacher")}>AIVirTeach</Button>
             <Button variant="ghost" type="button" role="tab" aria-selected={activeTab === "path"} onClick={() => setActiveTab("path")}>{t("Learning Path", "学习路径")}</Button>
@@ -541,16 +529,16 @@ export function WorkspaceV2() {
         {panel === "console" && consoleSession?.data ? <ConsoleViewer ref={consoleViewerRef} data={consoleSession.data} labId={consoleSession.labId} enrollmentId={enrollment.id} onError={handleConsoleError} /> : panel === "start-console" ? <section className="vm-empty-state" role="status"><span className="vm-display-icon" aria-hidden="true" /><h2>Learning VM</h2>{consoleError && <Alert className="auth-error" variant="destructive">{consoleError}</Alert>}<Button size="lg" type="button" onClick={() => void startConsoleSession()} disabled={consoleLoading || stopping}>{consoleLoading ? "Starting..." : "Start remote desktop"}</Button></section> : panel === "stopped" ? <section className="vm-empty-state" role="status"><span className="vm-display-icon" aria-hidden="true" /><h2>Learning VM</h2><p>Your Learning VM is closed. Resume it to keep working.</p>{resumeError && <Alert className="auth-error" variant="destructive">{resumeError}</Alert>}<Button size="lg" type="button" onClick={resumeWorkspace} disabled={resuming}>{resuming ? "Resuming..." : "Resume learning environment"}</Button></section> : panel === "error" ? <section className="vm-empty-state" role="status"><span className="vm-display-icon" aria-hidden="true" /><h2>Learning VM</h2><p>{workspace?.errorMessage || "Could not start your Learning VM."}</p><Button size="lg" type="button" onClick={retryWorkspace} disabled={retrying}>{retrying ? "Retrying..." : "Retry"}</Button></section> : <section className="vm-empty-state" role="status"><span className="vm-display-icon" aria-hidden="true" /><h2>Learning VM</h2><p>{workspace?.status === "RESETTING" ? t("Clearing the previous Learning VM. This can take a few minutes.", "正在清理之前的学习虚拟机，可能需要几分钟。") : t("Preparing your Learning VM. This can take a few minutes.", "正在准备学习虚拟机，可能需要几分钟。")}</p></section>}
       </main>
 
-      <Dialog open={envVariablesOpen} onOpenChange={setEnvVariablesOpen}>
-        <DialogContent className="lab-v2-env-dialog">
+      <Dialog open={exitDialogOpen} onOpenChange={setExitDialogOpen}>
+        <DialogContent>
           <DialogHeader>
-            <DialogTitle>{t("Environment variables", "环境变量")}</DialogTitle>
-            <DialogDescription>{t(`Requirements available in the Learning VM for ${course.title}.`, `${course.title} 的学习虚拟机中可用的要求。`)}</DialogDescription>
+            <DialogTitle>{t("Leave Learning Lab?", "退出学习实验室？")}</DialogTitle>
+            <DialogDescription>{t("Return to the dashboard?", "返回仪表板？")}</DialogDescription>
           </DialogHeader>
-          <ul className="lab-v2-env-list">
-            {course.requirements.map((requirement) => <li key={requirement}><span aria-hidden="true">✓</span><strong>{requirement}</strong></li>)}
-          </ul>
-          <DialogFooter><Button type="button" onClick={() => setEnvVariablesOpen(false)}>{t("Done", "完成")}</Button></DialogFooter>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => setExitDialogOpen(false)}>{t("Stay", "留在此处")}</Button>
+            <Button type="button" variant="destructive" onClick={() => router.push("/dashboard")}>{t("Leave Learning Lab", "退出学习实验室")}</Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
 
