@@ -32,6 +32,12 @@ describe("parseChatStreamFrame", () => {
     expect(parseChatStreamFrame('{"type":"unknown"}')).toBeNull();
   });
 
+  it("rejects unknown or missing frame types even when message fields are present", () => {
+    for (const type of [undefined, "unknown", "progress"]) {
+      expect(parseChatStreamFrame(JSON.stringify({ type, studentMessage: { text: "question" }, tutorMessage: { text: "unconfirmed" } }))).toBeNull();
+    }
+  });
+
   it("JSON 是数组或原始值而不是对象时返回 null", () => {
     expect(parseChatStreamFrame("[1,2,3]")).toBeNull();
     expect(parseChatStreamFrame("42")).toBeNull();

@@ -20,7 +20,9 @@ function errorCode(raw: string): unknown {
   } catch { return undefined; }
 }
 
-export async function readTutorStream(response: Response, { signal, onState, onTool }: TutorStreamCallbacks): Promise<string> {
+export type SavedTutorMessage = { id?: string; text: string; diagnosisDetails?: import("./diagnosis-details").DiagnosisDetails };
+
+export async function readTutorStream(response: Response, { signal, onState, onTool }: TutorStreamCallbacks): Promise<SavedTutorMessage> {
   if (!response.body) throw new Error("The tutor stream has no body.");
   let state = initialTutorReply;
   const dispatch = (event: TutorReplyEvent) => {
@@ -39,7 +41,7 @@ export async function readTutorStream(response: Response, { signal, onState, onT
     if (parsed.type === "complete" && frame.event !== "complete") continue;
     if (parsed.type === "complete") {
       dispatch({ kind: "completed", text: parsed.tutorMessage.text });
-      return parsed.tutorMessage.text;
+      return parsed.tutorMessage;
     }
     const toolEvent = parseTutorToolEvent(parsed.event, parsed.data);
     if (toolEvent) onTool?.(toolEvent);

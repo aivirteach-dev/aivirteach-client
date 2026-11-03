@@ -315,6 +315,7 @@ export type ApiChatMessage = {
   role: "student" | "tutor";
   text: string;
   createdAt: string;
+  diagnosisDetails?: unknown;
 };
 
 export type ApiWorkspace = {
