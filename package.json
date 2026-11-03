@@ -18,8 +18,9 @@
     "typecheck": "mkdir -p work && wrangler types work/worker-types.d.ts --config wrangler.production.jsonc && tsc --noEmit"
   },
   "dependencies": {
-    "@tanstack/markdown": "^0.0.15",
     "@base-ui/react": "^1.8.0",
+    "@shadcn/react": "^0.3.1",
+    "@tanstack/markdown": "^0.0.15",
     "class-variance-authority": "^0.7.1",
     "cn": "^0.3.0",
     "drizzle-orm": "0.45.2",
