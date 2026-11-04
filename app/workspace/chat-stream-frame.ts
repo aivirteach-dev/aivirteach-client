@@ -1,9 +1,15 @@
+import { parseDiagnosisDetails, type DiagnosisDetails } from "./diagnosis-details";
+
 export type ChatStreamFrame =
   | { type: "progress"; event: string; data: Record<string, unknown> }
-  | { type: "complete"; studentMessage: { text: string }; tutorMessage: { text: string } };
+  | { type: "complete"; studentMessage: { text: string }; tutorMessage: { id?: string; text: string; diagnosisDetails?: DiagnosisDetails } };
 
-function isTextMessage(value: unknown): value is { text: string } {
-  return typeof value === "object" && value !== null && typeof (value as { text?: unknown }).text === "string";
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function isTextMessage(value: unknown): value is Record<string, unknown> & { text: string } {
+  return isRecord(value) && typeof value.text === "string";
 }
 
 export function parseChatStreamFrame(raw: string): ChatStreamFrame | null {
@@ -13,14 +19,17 @@ export function parseChatStreamFrame(raw: string): ChatStreamFrame | null {
   } catch {
     return null;
   }
-  if (typeof data !== "object" || data === null || !("type" in data)) return null;
-  const record = data as Record<string, unknown>;
-
-  if (record.type === "progress" && typeof record.event === "string" && typeof record.data === "object" && record.data !== null) {
-    return { type: "progress", event: record.event, data: record.data as Record<string, unknown> };
+  if (!isRecord(data)) return null;
+  if (data.type === "progress" && typeof data.event === "string" && isRecord(data.data)) {
+    return { type: "progress", event: data.event, data: data.data };
   }
-  if (record.type === "complete" && isTextMessage(record.studentMessage) && isTextMessage(record.tutorMessage)) {
-    return { type: "complete", studentMessage: record.studentMessage, tutorMessage: record.tutorMessage };
-  }
-  return null;
+  if (data.type !== "complete" || !isTextMessage(data.studentMessage) || !isTextMessage(data.tutorMessage)) return null;
+  const tutorMessage = data.tutorMessage;
+  const id = typeof tutorMessage.id === "string" && tutorMessage.id.length <= 128 ? tutorMessage.id : undefined;
+  const diagnosisDetails = parseDiagnosisDetails(tutorMessage.diagnosisDetails);
+  return {
+    type: "complete",
+    studentMessage: { text: data.studentMessage.text },
+    tutorMessage: { ...(id ? { id } : {}), text: tutorMessage.text, ...(diagnosisDetails ? { diagnosisDetails } : {}) },
+  };
 }

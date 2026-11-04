@@ -3180,6 +3180,13 @@ html body .lesson-progress .lesson-completion-button.learning-path-button { heig
 .tutor-conversation .message.student > [data-slot="message-content"] { width: fit-content; max-width: 82%; align-items: flex-end; }
 .tutor-conversation .message.student p { margin: 0; padding: 10px 14px; white-space: pre-wrap; }
 .tutor-conversation .message.tutor > [data-slot="message-content"] { width: 100%; }
+.saved-diagnosis-details { margin-top: 12px; border-top: 1px solid var(--outline); padding-top: 10px; font-size: 13px; }
+.saved-diagnosis-details > summary { cursor: pointer; color: var(--muted-foreground); }
+.saved-diagnosis-section { margin-top: 12px; }
+.saved-diagnosis-section h4 { margin: 0 0 6px; font-size: 12px; font-weight: 600; }
+.saved-diagnosis-section ul { margin: 0; padding-left: 20px; }
+.saved-diagnosis-section li + li { margin-top: 8px; }
+.saved-diagnosis-section p { margin: 3px 0 0; white-space: pre-wrap; }
 .tutor-conversation [data-slot="message-scroller-button"] { z-index: 2; border: 1px solid var(--outline); }
 .tutor-reply-status { color: var(--muted-foreground); font-size: 12px; }
 .tutor-tool-trace { margin-block: 8px; padding: 10px; border: 1px solid var(--outline); background: var(--surface-low); }

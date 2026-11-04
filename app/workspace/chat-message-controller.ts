@@ -1,4 +1,6 @@
-export type ChatMessage = { id?: string; role: "tutor" | "student"; text: string };
+import type { DiagnosisDetails } from "./diagnosis-details";
+
+export type ChatMessage = { id?: string; role: "tutor" | "student"; text: string; diagnosisDetails?: DiagnosisDetails };
 export type ChatMessagesSnapshot = { key: string; messages: readonly ChatMessage[] };
 
 type Conversation = {

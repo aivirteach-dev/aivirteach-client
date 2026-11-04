@@ -330,12 +330,12 @@ export function WorkspaceV2() {
     try {
       setTutorDisplay({ kind: "active", key: chatKey, reply: initialTutorReply, tools: [] });
       const response = await api.streamChatMessage(enrollment.id, { requestId: crypto.randomUUID(), text, context: chatContext }, request.signal);
-      const tutorText = await readTutorStream(response, {
+      const tutorMessage = await readTutorStream(response, {
         signal: request.signal,
         onState(reply) { if (request.isCurrent()) setTutorDisplay((current) => current?.kind === "active" && current.key === chatKey ? { ...current, reply } : current); },
         onTool(event) { if (request.isCurrent()) setTutorDisplay((current) => current?.kind === "active" && current.key === chatKey ? { ...current, tools: reduceTutorTools(current.tools, event) } : current); },
       });
-      if (request.isCurrent()) { appendMessage({ role: "tutor", text: tutorText }); setTutorDisplay(null); }
+      if (request.isCurrent()) { appendMessage({ id: tutorMessage.id, role: "tutor", text: tutorMessage.text, diagnosisDetails: tutorMessage.diagnosisDetails }); setTutorDisplay(null); }
     } catch (caught) {
       if (request.isCurrent()) setTutorDisplay({ kind: "failed", key: chatKey, refresh: "idle", message: caught instanceof TutorReplyNotSavedError ? t("The reply could not be confirmed as saved. Refresh the conversation to check before asking again.", "回复未能确认保存。再次提问前，请刷新对话确认结果。") : upstreamErrorMessage(caught, { retryable: t("The reply could not be confirmed. Refresh the conversation to check before trying again.", "暂时无法确认回复结果。重试前，请刷新对话确认。"), unavailable: t("The tutor is unavailable. Please contact support.", "助教服务暂时不可用，请联系客服。") }) });
     } finally {
