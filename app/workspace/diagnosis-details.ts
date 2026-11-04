@@ -1,5 +1,8 @@
 import type { DiagnosticTool } from "./tutor-tools";
 
+const MAX_PUBLIC_TITLE_LENGTH = 1_000;
+const MAX_PUBLIC_DETAIL_LENGTH = 10_000;
+
 export type DiagnosisDetails = {
   tools: Array<{
     tool: DiagnosticTool;
@@ -87,13 +90,13 @@ export function parseDiagnosisDetails(
         if (!isRecord(entry)) return [];
         if (
           typeof entry.title !== "string" ||
-          entry.title.trim().length > 200 ||
+          entry.title.trim().length > MAX_PUBLIC_TITLE_LENGTH ||
           typeof entry.detail !== "string" ||
-          entry.detail.trim().length > 2_000
+          entry.detail.trim().length > MAX_PUBLIC_DETAIL_LENGTH
         )
           return [];
-        const title = boundedString(entry.title, 200);
-        const detail = boundedString(entry.detail, 2_000);
+        const title = boundedString(entry.title, MAX_PUBLIC_TITLE_LENGTH);
+        const detail = boundedString(entry.detail, MAX_PUBLIC_DETAIL_LENGTH);
         return title && detail ? [{ title, detail }] : [];
       })
     : [];

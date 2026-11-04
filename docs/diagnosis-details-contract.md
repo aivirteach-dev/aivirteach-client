@@ -19,4 +19,4 @@ Tutor messages in history and the stream `complete` event may include optional `
 }
 ```
 
-The view offers only expand/collapse. Suggestions are plain text; the interface never executes them. Older and fallback messages omit the field.
+The view offers only expand/collapse. Suggestions are plain text; the interface never executes them. The client accepts the public wire limits of 1,000 characters for a title and 10,000 for detail, including redaction expansion. Older and fallback messages omit the field.
