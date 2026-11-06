@@ -32,9 +32,9 @@ export default function DashboardPage() {
   const currentCatalogCourse = courseCatalog.find((course) => course.title === profile.course.title) ?? (profile.accountType === "beginner" ? courseCatalog[2] : courseCatalog[0]);
   const practiceHours = Math.round(profile.stats.practiceMinutes / 60);
   const stats = [
-    { icon: "streak", value: t(`${profile.stats.streakDays} Days`, `${profile.stats.streakDays} 天`), label: t("Current Streak", "连续学习"), tone: "amber" },
-    { icon: "practice", value: `${practiceHours}h`, label: t("Practice Time", "练习时间"), tone: "neutral" },
-    { icon: "skills", value: String(profile.stats.skillsMastered), label: t("Skills Mastered", "已掌握技能"), tone: "peach" },
+    { id: "streak", icon: "streak", value: t(`${profile.stats.streakDays} Days`, `${profile.stats.streakDays} 天`), label: t("Current Streak", "连续学习"), tone: "amber" },
+    { id: "practice", icon: "practice", value: `${practiceHours}h`, label: t("Practice Time", "练习时间"), tone: "neutral" },
+    { id: "skills", icon: "skills", value: String(profile.stats.skillsMastered), label: t("Skills Mastered", "已掌握技能"), tone: "peach" },
   ];
 
   function submitSearch(event: FormEvent<HTMLFormElement>) {
@@ -56,10 +56,10 @@ export default function DashboardPage() {
       <main className={`dashboard page-content ${loading ? "data-loading" : ""}`}>
         {error && <Alert className="auth-error" variant="destructive">Backend unavailable: {error}</Alert>}
         <header className="dashboard-toolbar">
-          <form className="search-box" role="search" onSubmit={submitSearch}>
+          <form className="search-box" data-ui-role="search-capsule" role="search" onSubmit={submitSearch}>
             <Input aria-label={t("Search courses and skills", "搜索课程和技能")} placeholder={t("Search...", "搜索……")} value={searchQuery} onChange={(event) => { setSearchQuery(event.target.value); setSearchFeedback(""); }} />
-            <Button className="search-button" variant="ghost" size="icon" type="submit" aria-label={t("Search", "搜索")}><span className="search-glyph" aria-hidden="true" /></Button>
-            {searchFeedback && <output className="search-feedback" aria-live="polite">{searchFeedback}</output>}
+            <Button className="search-button" data-ui-role="search-submit" variant="ghost" size="icon" type="submit" aria-label={t("Search", "搜索")}><span className="search-glyph" aria-hidden="true" /></Button>
+            {searchFeedback && <output className="search-feedback" data-ui-role="search-feedback" aria-live="polite">{searchFeedback}</output>}
           </form>
           <NotificationMenu placement="dashboard" />
         </header>
@@ -68,7 +68,7 @@ export default function DashboardPage() {
           <p>{isAllClear ? t("You have completed every available lesson. Keep your skills fresh or explore what is next.", "你已完成所有可用课程。继续巩固技能，或探索接下来的内容。") : t("Pick up where you left off or explore new concepts.", "从上次离开的地方继续，或探索新概念。")}</p>
         </section>
         <section className="dashboard-grid" aria-label={t("Current learning overview", "当前学习概览")}>
-          <Card as="article" className="course-card">
+          <Card as="article" className="course-card" uiRole="dashboard-course">
             <Badge className="course-chip" variant="secondary">◇ &nbsp; {profile.course.category}</Badge>
             <h2>{profile.course.title}</h2>
             <p>{profile.course.module}</p>
@@ -77,7 +77,7 @@ export default function DashboardPage() {
           <Button render={<Link href={isAllClear ? "/courses" : "/workspace"} />} className="primary-button resume-button" size="lg" onClick={() => { if (!isAllClear) { activateCourse(currentCatalogCourse.id); void recordPractice(15); } }}>{isAllClear ? t("Explore Courses", "探索课程") : t("Resume Session", "继续学习")} <span>→</span></Button>
           </Card>
           <div className="stat-stack">
-            {stats.map((stat) => <Card as="article" className="stat-card" key={stat.label}><span className={`stat-icon ${stat.tone}`} aria-hidden="true"><i className={`stat-glyph ${stat.icon}`} /></span><div><strong>{stat.value}</strong><span>{stat.label}</span></div></Card>)}
+            {stats.map((stat) => <Card as="article" className="stat-card" uiRole="dashboard-stat" data-ui-tone={stat.id} key={stat.id}><span className={`stat-icon ${stat.tone}`} aria-hidden="true"><i className={`stat-glyph ${stat.icon}`} /></span><div><strong>{stat.value}</strong><span>{stat.label}</span></div></Card>)}
           </div>
         </section>
       </main>

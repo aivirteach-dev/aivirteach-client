@@ -72,3 +72,76 @@
 @media (pointer: coarse) {
   .course-lesson-view .lesson-copy-button { min-height: 44px; }
 }
+
+/* The standalone lesson preview follows the site theme; Learning Lab keeps its reading palette. */
+html[data-ui-customized="true"] .course-preview-page,
+html[data-ui-customized="true"] .course-preview-page .course-lesson-view {
+  background: var(--background);
+  color: var(--foreground);
+}
+html[data-ui-customized="true"] .course-preview-page .course-lesson-view {
+  --ink: var(--foreground);
+  --ink-soft: var(--muted-foreground);
+  --outline: var(--border);
+  --surface: var(--card);
+  --surface-container: var(--muted);
+  color-scheme: normal;
+}
+html[data-ui-customized="true"][data-theme="light"] .course-preview-page .course-lesson-view { --primary: var(--ui-accent); }
+html[data-ui-customized="true"][data-theme="dark"] .course-preview-page .course-lesson-view { --primary: var(--ui-dark-primary); }
+html[data-ui-customized="true"] .course-preview-page :is(.course-lesson-heading, .course-lesson-body) {
+  border-color: var(--ui-card-border);
+  border-radius: var(--ui-card-radius);
+  background: var(--ui-card-bg);
+  color: var(--ink);
+}
+html[data-ui-customized="true"] .course-preview-page .course-lesson-heading > p {
+  border-color: var(--primary);
+  background: color-mix(in srgb, var(--primary) 18%, var(--ui-card-bg));
+  color: var(--ink);
+}
+html[data-ui-customized="true"] .course-preview-page .lesson-markdown :is(h2, h3) { color: var(--ink); }
+html[data-ui-customized="true"] .course-preview-page .lesson-markdown li::marker { color: var(--primary); }
+html[data-ui-customized="true"] .course-preview-page .lesson-markdown a { color: var(--primary); }
+html[data-ui-customized="true"] .course-preview-page .lesson-markdown :not(pre) > code {
+  background: var(--surface-container);
+  color: var(--primary);
+}
+html[data-ui-customized="true"] .course-preview-page .lesson-markdown pre {
+  background: var(--ui-code-bg);
+  color: var(--ui-code-text);
+}
+html[data-ui-customized="true"] .course-preview-page .lesson-copy-button {
+  border-color: var(--ui-button-bg);
+  background: var(--ui-button-bg);
+  color: var(--ui-button-text);
+}
+html[data-ui-customized="true"] .course-preview-page .lesson-copy-button:is(:hover, :focus-visible) {
+  background: var(--ui-button-focus-bg);
+  color: var(--ui-button-focus-text);
+}
+html[data-ui-customized="true"] .course-preview-page :is(.lesson-step, .lb-code-step, .lb-resource-link, .lb-diagram-node) {
+  border-color: var(--ui-card-border);
+  border-radius: var(--ui-field-radius);
+  background: var(--surface-container);
+  color: var(--ink);
+}
+html[data-ui-customized="true"] .course-preview-page .lesson-step-number {
+  background: var(--primary);
+  color: var(--primary-foreground);
+}
+html[data-ui-customized="true"] .course-preview-page .lesson-callout {
+  border-color: var(--outline);
+  border-radius: var(--ui-field-radius);
+  background: var(--surface-container);
+  color: var(--ink);
+}
+html[data-ui-customized="true"] .course-preview-page .lesson-callout--primary { background: color-mix(in srgb, var(--primary) 16%, var(--surface)); }
+html[data-ui-customized="true"] .course-preview-page .lesson-callout--success { background: color-mix(in srgb, var(--lesson-success) 16%, var(--surface)); }
+html[data-ui-customized="true"] .course-preview-page .lesson-callout--warning { background: color-mix(in srgb, var(--amber) 16%, var(--surface)); }
+html[data-ui-customized="true"] .course-preview-page .lb-table-scroll,
+html[data-ui-customized="true"] .course-preview-page .lb-image img { border-color: var(--ui-card-border); border-radius: var(--ui-field-radius); }
+html[data-ui-customized="true"] .course-preview-page .lb-table th { background: var(--surface-container); color: var(--ink); }
+html[data-ui-customized="true"] .course-preview-page .lb-table td { background: var(--surface); color: var(--ink); }
+html[data-ui-customized="true"] .course-preview-page .lb-warning { color: var(--ink); background: color-mix(in srgb, var(--amber) 18%, var(--surface)); }
+html[data-ui-customized="true"] .course-preview-page .lb-invalid { color: var(--destructive); background: color-mix(in srgb, var(--destructive) 12%, var(--surface)); }

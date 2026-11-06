@@ -18,14 +18,14 @@ import { Slider } from "@/components/ui/slider";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   clearStoredUiCustomization,
-  defaultUiCustomization,
   clearUiCustomizationDraft,
   getPreviewUiCustomization,
-  previewDraftUiCustomization,
   previewUiCustomization,
+  type CardRoleColorKey,
   type UiCustomization,
 } from "../lib/ui-customization";
-import { getSavedUiCustomization } from "../lib/site-ui-customization";
+import { getSavedThemePresets } from "../lib/site-ui-customization";
+import { clearThemePresetsPreview, defaultThemePresets, getPreviewThemePresets, getThemePreset, previewThemePresets, replaceThemePreset, updateThemePreset, type ThemePresets } from "../lib/theme-presets";
 import { clearInterfaceVersionPreview, clearStoredInterfaceVersion, getServerInterfaceVersion, getStoredInterfaceVersion, previewInterfaceVersion, subscribeToInterfaceVersion, type InterfaceVersion } from "../lib/interface-version";
 import { clearStoredTheme, clearThemePreview, getServerTheme, getStoredTheme, previewTheme, subscribeToTheme, type Theme } from "../lib/theme";
 
@@ -40,6 +40,19 @@ function ColorControl({ label, value, onChange }: { label: string; value: string
   );
 }
 
+function CardRoleColorControl({ label, value, inheritedColor, inheritLabel, onChange }: { label: string; value: string; inheritedColor: string; inheritLabel: string; onChange: (value: string) => void }) {
+  const inherits = value === "inherit";
+  return (
+    <div className="advanced-card-role-control">
+      <label className="advanced-toggle-control">
+        <Checkbox checked={inherits} onCheckedChange={(checked) => onChange(checked ? "inherit" : inheritedColor)} />
+        <span>{label}: {inheritLabel}</span>
+      </label>
+      {inherits ? <span className="advanced-inherited-color"><i style={{ backgroundColor: inheritedColor }} aria-hidden="true" />{inheritedColor.toUpperCase()}</span> : <ColorControl label={label} value={value} onChange={onChange} />}
+    </div>
+  );
+}
+
 function RangeControl({ label, value, minimum, maximum, onChange }: { label: string; value: number; minimum: number; maximum: number; onChange: (value: number) => void }) {
   return (
     <label className="advanced-range-control">
@@ -51,12 +64,12 @@ function RangeControl({ label, value, minimum, maximum, onChange }: { label: str
 
 export function AdvancedUiSettings({ t }: { t: Translate }) {
   const router = useRouter();
-  const [draft, setDraft] = useState(defaultUiCustomization);
+  const [draft, setDraft] = useState(getThemePreset(defaultThemePresets, "neubrutal", "light"));
   const [saved, setSaved] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
-  const draftRef = useRef(defaultUiCustomization);
+  const presetsRef = useRef<ThemePresets>(defaultThemePresets);
   const interfaceVersion = useSyncExternalStore(subscribeToInterfaceVersion, getStoredInterfaceVersion, getServerInterfaceVersion);
   const theme = useSyncExternalStore(subscribeToTheme, getStoredTheme, getServerTheme);
 
@@ -65,16 +78,23 @@ export function AdvancedUiSettings({ t }: { t: Translate }) {
     if (new URLSearchParams(window.location.search).get("saved") === "1") {
       queueMicrotask(() => { if (!cancelled) setSaved(true); });
     }
-    const stored = getPreviewUiCustomization() ?? getSavedUiCustomization();
-    if (stored) {
-      previewUiCustomization(stored);
-      queueMicrotask(() => {
-        if (!cancelled) {
-          draftRef.current = stored;
-          setDraft(stored);
-        }
-      });
+    let stored = getPreviewThemePresets() ?? getSavedThemePresets();
+    const legacyDraft = getPreviewUiCustomization();
+    if (legacyDraft && !getPreviewThemePresets()) {
+      const style = getStoredInterfaceVersion();
+      const mode = getStoredTheme();
+      stored = replaceThemePreset(stored, style, mode, legacyDraft);
+      clearUiCustomizationDraft();
+      previewThemePresets(stored);
     }
+    const selected = getThemePreset(stored, getStoredInterfaceVersion(), getStoredTheme());
+    previewUiCustomization(selected);
+    queueMicrotask(() => {
+      if (!cancelled) {
+        presetsRef.current = stored;
+        setDraft(selected);
+      }
+    });
     return () => {
       cancelled = true;
     };
@@ -83,22 +103,34 @@ export function AdvancedUiSettings({ t }: { t: Translate }) {
   function update<K extends keyof UiCustomization>(key: K, value: UiCustomization[K]) {
     setSaved(false);
     setSaveError("");
-    const next = { ...draftRef.current, [key]: value };
-    draftRef.current = next;
-    setDraft(next);
-    previewDraftUiCustomization(next);
+    const next = updateThemePreset(presetsRef.current, interfaceVersion, theme, key, value);
+    presetsRef.current = next;
+    const selected = getThemePreset(next, interfaceVersion, theme);
+    setDraft(selected);
+    previewThemePresets(next);
+    previewUiCustomization(selected);
+  }
+
+  function cardRoleControl(key: CardRoleColorKey, label: string) {
+    return <CardRoleColorControl label={label} value={draft[key]} inheritedColor={draft.cardBackground} inheritLabel={t("Use general Card color", "使用通用卡片颜色")} onChange={(value) => update(key, value)} />;
   }
 
   function updateInterfaceVersion(version: InterfaceVersion) {
     setSaved(false);
     previewInterfaceVersion(version);
-    previewDraftUiCustomization(draftRef.current);
+    const selected = getThemePreset(presetsRef.current, version, theme);
+    setDraft(selected);
+    previewThemePresets(presetsRef.current);
+    previewUiCustomization(selected);
   }
 
   function updateThemeMode(nextTheme: Theme) {
     setSaved(false);
     previewTheme(nextTheme);
-    previewDraftUiCustomization(draftRef.current);
+    const selected = getThemePreset(presetsRef.current, interfaceVersion, nextTheme);
+    setDraft(selected);
+    previewThemePresets(presetsRef.current);
+    previewUiCustomization(selected);
   }
 
   async function save() {
@@ -108,19 +140,21 @@ export function AdvancedUiSettings({ t }: { t: Translate }) {
       const response = await fetch("/__dev/ui-customization", {
         method: "POST",
         headers: { "Content-Type": "application/json", "X-Aivirteach-Theme-Editor": "save" },
-        body: JSON.stringify({ interfaceVersion, theme, ...draftRef.current }),
+        body: JSON.stringify({ ...presetsRef.current, interfaceVersion, theme }),
       });
       if (!response.ok) throw new Error("Theme file could not be saved. Start the local development server with npm run dev.");
-      const next = await response.json() as UiCustomization;
+      const next = await response.json() as ThemePresets;
       clearStoredUiCustomization();
       clearStoredInterfaceVersion();
       clearStoredTheme();
       clearUiCustomizationDraft();
+      clearThemePresetsPreview();
       clearInterfaceVersionPreview();
       clearThemePreview();
-      previewUiCustomization(next);
-      draftRef.current = next;
-      setDraft(next);
+      presetsRef.current = next;
+      const selected = getThemePreset(next, interfaceVersion, theme);
+      previewUiCustomization(selected);
+      setDraft(selected);
       setSaved(true);
       window.location.assign("/settings?tab=advanced&saved=1");
     } catch (error) {
@@ -131,65 +165,79 @@ export function AdvancedUiSettings({ t }: { t: Translate }) {
   }
 
   function reset() {
-    draftRef.current = defaultUiCustomization;
-    setDraft(defaultUiCustomization);
+    presetsRef.current = defaultThemePresets;
+    setDraft(getThemePreset(defaultThemePresets, "neubrutal", "light"));
     previewInterfaceVersion("neubrutal");
     previewTheme("light");
-    previewDraftUiCustomization(defaultUiCustomization);
+    previewThemePresets(defaultThemePresets);
+    previewUiCustomization(getThemePreset(defaultThemePresets, "neubrutal", "light"));
     setSaved(false);
   }
 
   function discard() {
     clearUiCustomizationDraft();
+    clearThemePresetsPreview();
     clearInterfaceVersionPreview();
     clearThemePreview();
-    const savedSettings = getSavedUiCustomization() ?? defaultUiCustomization;
-    draftRef.current = savedSettings;
-    setDraft(savedSettings);
+    const savedSettings = getSavedThemePresets();
+    presetsRef.current = savedSettings;
+    const selected = getThemePreset(savedSettings, savedSettings.interfaceVersion, savedSettings.theme);
+    previewUiCustomization(selected);
+    setDraft(selected);
     setSaved(false);
     setSaveError("");
   }
 
   return (
     <section className="advanced-settings" aria-label={t("Advanced theme settings", "高级主题设置")}>
-      <div className="advanced-settings-intro">
+      <div className="advanced-settings-intro" data-ui-role="theme-editor-intro">
         <div><p className="eyebrow">{t("DESIGN SYSTEM", "设计系统")}</p><h2>{t("Site-wide theme editor", "全站主题编辑器")}</h2></div>
-        <p>{t("Edit the live preview, visit the dashboard to inspect the site, then save your theme to the frontend repo. Commit the JSON file to carry it into your next build.", "实时预览修改，前往仪表板查看网站，然后将主题保存到前端仓库。提交 JSON 文件后，下次构建会沿用这些设置。")}</p>
+        <p>{t("Edit each of the four style and color combinations. Preview the site, then save all four presets to the frontend repo. Commit the JSON file to carry them into your next build.", "分别编辑四种风格与配色组合。预览网站后，将四套预设保存到前端仓库。提交 JSON 文件后，下次构建会沿用这些设置。")}</p>
       </div>
 
       <div className="advanced-settings-layout">
-        <aside className="advanced-controls">
+        <aside className="advanced-controls" data-ui-role="theme-editor-controls">
           <fieldset><legend>{t("Interface style", "界面风格")}</legend>
             <label className="advanced-select-control">
               <span>{t("Visual style", "视觉风格")}</span>
               <Select value={interfaceVersion} onChange={(event) => updateInterfaceVersion(event.target.value as InterfaceVersion)}>
-                <option value="v1">{t("Original V1", "原版 V1")}</option>
                 <option value="v2">{t("Modern V2", "现代 V2")}</option>
-                <option value="soft">{t("Soft neumorphism", "柔和新拟态")}</option>
-                <option value="soft-brutal">{t("Soft brutalism", "柔和粗野主义")}</option>
-                <option value="brutal">{t("Brutalism V2", "粗野主义 V2")}</option>
                 <option value="neubrutal">{t("Neubrutalism", "新粗野主义")}</option>
               </Select>
             </label>
           </fieldset>
           <fieldset><legend>{t("Theme mode", "主题模式")}</legend>
-            <p className="advanced-control-description">{t("Switch modes while editing to preview each palette.", "编辑时切换模式以预览每套配色。")}</p>
+            <p className="advanced-control-description" aria-live="polite">{t("Editing", "正在编辑")}: {interfaceVersion === "v2" ? t("Modern V2", "现代 V2") : t("Neobrutalism", "新粗野主义")} · {theme === "light" ? t("Light", "浅色") : t("Dark", "深色")}</p>
             <Button type="button" variant="outline" onClick={() => updateThemeMode(theme === "dark" ? "light" : "dark")}>
               {theme === "dark" ? t("Light", "浅色") : t("Dark", "深色")}
             </Button>
           </fieldset>
+          <fieldset><legend>{t("App shell", "应用外壳")}</legend>
+            <p className="advanced-control-description">{t("Shared topbar across the dashboard, courses, progress, and settings.", "仪表板、课程、进度与设置共用的顶部导航栏。")}</p>
+            <ColorControl label={t("Topbar background", "顶部导航背景")} value={draft.shellBackground} onChange={(value) => update("shellBackground", value)} />
+            <ColorControl label={t("Topbar text", "顶部导航文字")} value={draft.shellText} onChange={(value) => update("shellText", value)} />
+            <ColorControl label={t("Topbar border", "顶部导航边框")} value={draft.shellBorder} onChange={(value) => update("shellBorder", value)} />
+            <ColorControl label={t("Navigation and menu hover", "导航与菜单悬停色")} value={draft.menuItemHover} onChange={(value) => update("menuItemHover", value)} />
+          </fieldset>
           <fieldset><legend>{t("Brand and feedback", "品牌与反馈")}</legend>
-            <ColorControl label={t("Accent color", "强调色")} value={draft.accentColor} onChange={(value) => update("accentColor", value)} />
-            <ColorControl label={t("Focused field border", "字段聚焦边框")} value={draft.focusBorder} onChange={(value) => update("focusBorder", value)} />
-            <ColorControl label={t("Menu item hover", "菜单项悬停色")} value={draft.menuItemHover} onChange={(value) => update("menuItemHover", value)} />
+            <ColorControl label={t("Focus ring and field border", "聚焦外框与字段边框")} value={draft.focusBorder} onChange={(value) => update("focusBorder", value)} />
+          </fieldset>
+          <fieldset><legend>{t("Status and data", "状态与数据")}</legend>
+            <ColorControl label={t("Success", "成功状态")} value={draft.statusSuccess} onChange={(value) => update("statusSuccess", value)} />
+            <ColorControl label={t("Warning", "警告状态")} value={draft.statusWarning} onChange={(value) => update("statusWarning", value)} />
+            <ColorControl label={t("Error", "错误状态")} value={draft.statusError} onChange={(value) => update("statusError", value)} />
+            <ColorControl label={t("Progress track", "进度条轨道")} value={draft.progressTrack} onChange={(value) => update("progressTrack", value)} />
+            <ColorControl label={t("Loading skeleton", "加载占位背景")} value={draft.skeletonBackground} onChange={(value) => update("skeletonBackground", value)} />
           </fieldset>
           <fieldset><legend>{t("Buttons", "按钮")}</legend>
             <ColorControl label={t("Background", "背景色")} value={draft.buttonBackground} onChange={(value) => update("buttonBackground", value)} />
             <ColorControl label={t("Text", "文字颜色")} value={draft.buttonText} onChange={(value) => update("buttonText", value)} />
             <ColorControl label={t("Focused/selected background", "聚焦/选中背景色")} value={draft.buttonFocusBackground} onChange={(value) => update("buttonFocusBackground", value)} />
+            <ColorControl label={t("Focused/selected text", "聚焦/选中文字")} value={draft.buttonFocusText} onChange={(value) => update("buttonFocusText", value)} />
             <RangeControl label={t("Height", "高度")} value={draft.buttonHeight} minimum={28} maximum={72} onChange={(value) => update("buttonHeight", value)} />
             <RangeControl label={t("Font size", "字号")} value={draft.buttonFontSize} minimum={11} maximum={22} onChange={(value) => update("buttonFontSize", value)} />
             <RangeControl label={t("Corner radius", "圆角")} value={draft.buttonRadius} minimum={0} maximum={32} onChange={(value) => update("buttonRadius", value)} />
+            <RangeControl label={t("Border width", "边框宽度")} value={draft.buttonBorderWidth} minimum={0} maximum={6} onChange={(value) => update("buttonBorderWidth", value)} />
           </fieldset>
           <fieldset><legend>{t("Learning Path buttons", "学习路径按钮")}</legend>
             <p className="advanced-control-description">{t("Styles Previous, Next, and Mark lesson complete in the Learning Lab.", "设置学习实验室中上一节、下一节和标记本节已学完按钮的样式。")}</p>
@@ -209,30 +257,54 @@ export function AdvancedUiSettings({ t }: { t: Translate }) {
             <RangeControl label={t("Height", "高度")} value={draft.fieldHeight} minimum={36} maximum={76} onChange={(value) => update("fieldHeight", value)} />
             <RangeControl label={t("Font size", "字号")} value={draft.fieldFontSize} minimum={12} maximum={22} onChange={(value) => update("fieldFontSize", value)} />
             <RangeControl label={t("Corner radius", "圆角")} value={draft.fieldRadius} minimum={0} maximum={32} onChange={(value) => update("fieldRadius", value)} />
+            <RangeControl label={t("Border width", "边框宽度")} value={draft.fieldBorderWidth} minimum={0} maximum={6} onChange={(value) => update("fieldBorderWidth", value)} />
           </fieldset>
           <fieldset><legend>{t("Cards", "卡片")}</legend>
             <ColorControl label={t("Background", "背景色")} value={draft.cardBackground} onChange={(value) => update("cardBackground", value)} />
             <ColorControl label={t("Border", "边框颜色")} value={draft.cardBorder} onChange={(value) => update("cardBorder", value)} />
             <RangeControl label={t("Corner radius", "圆角")} value={draft.cardRadius} minimum={0} maximum={32} onChange={(value) => update("cardRadius", value)} />
             <RangeControl label={t("Inner spacing", "内边距")} value={draft.cardPadding} minimum={8} maximum={48} onChange={(value) => update("cardPadding", value)} />
+            <RangeControl label={t("Border width", "边框宽度")} value={draft.cardBorderWidth} minimum={0} maximum={6} onChange={(value) => update("cardBorderWidth", value)} />
+          </fieldset>
+          <fieldset><legend>{t("Overlays", "浮层")}</legend>
+            <p className="advanced-control-description">{t("Popovers, dropdown menus, and dialogs share these colors.", "弹出层、下拉菜单和对话框共用这些颜色。")}</p>
+            <ColorControl label={t("Background", "背景色")} value={draft.overlayBackground} onChange={(value) => update("overlayBackground", value)} />
+            <ColorControl label={t("Text", "文字颜色")} value={draft.overlayText} onChange={(value) => update("overlayText", value)} />
+            <ColorControl label={t("Border", "边框颜色")} value={draft.overlayBorder} onChange={(value) => update("overlayBorder", value)} />
+          </fieldset>
+          <fieldset><legend>{t("Content and code", "内容与代码")}</legend>
+            <p className="advanced-control-description">{t("Code examples in the demo course and the separate lesson preview.", "示例课程和独立课程预览中的代码示例。")}</p>
+            <ColorControl label={t("Code background", "代码背景")} value={draft.codeBackground} onChange={(value) => update("codeBackground", value)} />
+            <ColorControl label={t("Code text", "代码文字")} value={draft.codeText} onChange={(value) => update("codeText", value)} />
+            <ColorControl label={t("Code border", "代码边框")} value={draft.codeBorder} onChange={(value) => update("codeBorder", value)} />
           </fieldset>
           {theme === "light" ? (
             <>
+              <fieldset><legend>{t("Light theme main/base colors", "浅色主题主色与基础色")}</legend>
+                <ColorControl label={t("Page background", "页面背景")} value={draft.lightBackground} onChange={(value) => update("lightBackground", value)} />
+                <ColorControl label={t("Main surface", "主要表面")} value={draft.lightSurface} onChange={(value) => update("lightSurface", value)} />
+                <ColorControl label={t("Muted surface", "次要表面")} value={draft.lightSurfaceMuted} onChange={(value) => update("lightSurfaceMuted", value)} />
+                <ColorControl label={t("Main text", "主要文字")} value={draft.lightText} onChange={(value) => update("lightText", value)} />
+                <ColorControl label={t("Muted text", "次要文字")} value={draft.lightTextMuted} onChange={(value) => update("lightTextMuted", value)} />
+                <ColorControl label={t("Borders and shadows", "边框与阴影")} value={draft.lightBorder} onChange={(value) => update("lightBorder", value)} />
+                <ColorControl label={t("Primary accent", "主要强调色")} value={draft.accentColor} onChange={(value) => update("accentColor", value)} />
+                <ColorControl label={t("Secondary accent", "次要强调色")} value={draft.lightSecondary} onChange={(value) => update("lightSecondary", value)} />
+              </fieldset>
               <fieldset><legend>{t("Dashboard cards — light", "仪表板卡片 — 浅色")}</legend>
-                <ColorControl label={t("Current course", "当前课程")} value={draft.dashboardCourseCard} onChange={(value) => update("dashboardCourseCard", value)} />
-                <ColorControl label={t("Current streak", "连续学习")} value={draft.dashboardStreakCard} onChange={(value) => update("dashboardStreakCard", value)} />
-                <ColorControl label={t("Practice time", "练习时间")} value={draft.dashboardPracticeCard} onChange={(value) => update("dashboardPracticeCard", value)} />
-                <ColorControl label={t("Skills mastered", "已掌握技能")} value={draft.dashboardSkillsCard} onChange={(value) => update("dashboardSkillsCard", value)} />
+                {cardRoleControl("dashboardCourseCard", t("Current course", "当前课程"))}
+                {cardRoleControl("dashboardStreakCard", t("Current streak", "连续学习"))}
+                {cardRoleControl("dashboardPracticeCard", t("Practice time", "练习时间"))}
+                {cardRoleControl("dashboardSkillsCard", t("Skills mastered", "已掌握技能"))}
               </fieldset>
               <fieldset><legend>{t("Progress cards — light", "学习进度卡片 — 浅色")}</legend>
-                <ColorControl label={t("Practice metric", "练习指标")} value={draft.progressPracticeCard} onChange={(value) => update("progressPracticeCard", value)} />
-                <ColorControl label={t("Tasks metric", "任务指标")} value={draft.progressTasksCard} onChange={(value) => update("progressTasksCard", value)} />
-                <ColorControl label={t("Weekly goal", "每周目标")} value={draft.progressGoalCard} onChange={(value) => update("progressGoalCard", value)} />
-                <ColorControl label={t("Learning chart", "学习图表")} value={draft.progressChartCard} onChange={(value) => update("progressChartCard", value)} />
-                <ColorControl label={t("Achievement 1", "成就 1")} value={draft.progressAchievement1} onChange={(value) => update("progressAchievement1", value)} />
-                <ColorControl label={t("Achievement 2", "成就 2")} value={draft.progressAchievement2} onChange={(value) => update("progressAchievement2", value)} />
-                <ColorControl label={t("Achievement 3", "成就 3")} value={draft.progressAchievement3} onChange={(value) => update("progressAchievement3", value)} />
-                <ColorControl label={t("Achievement 4", "成就 4")} value={draft.progressAchievement4} onChange={(value) => update("progressAchievement4", value)} />
+                {cardRoleControl("progressPracticeCard", t("Practice metric", "练习指标"))}
+                {cardRoleControl("progressTasksCard", t("Tasks metric", "任务指标"))}
+                {cardRoleControl("progressGoalCard", t("Weekly goal", "每周目标"))}
+                {cardRoleControl("progressChartCard", t("Learning chart", "学习图表"))}
+                {cardRoleControl("progressAchievement1", t("Achievement 1", "成就 1"))}
+                {cardRoleControl("progressAchievement2", t("Achievement 2", "成就 2"))}
+                {cardRoleControl("progressAchievement3", t("Achievement 3", "成就 3"))}
+                {cardRoleControl("progressAchievement4", t("Achievement 4", "成就 4"))}
               </fieldset>
             </>
           ) : (
@@ -248,27 +320,28 @@ export function AdvancedUiSettings({ t }: { t: Translate }) {
                 <ColorControl label={t("Secondary accent", "次要强调色")} value={draft.darkSecondary} onChange={(value) => update("darkSecondary", value)} />
               </fieldset>
               <fieldset><legend>{t("Dashboard cards — dark", "仪表板卡片 — 深色")}</legend>
-                <ColorControl label={t("Current course", "当前课程")} value={draft.darkDashboardCourseCard} onChange={(value) => update("darkDashboardCourseCard", value)} />
-                <ColorControl label={t("Current streak", "连续学习")} value={draft.darkDashboardStreakCard} onChange={(value) => update("darkDashboardStreakCard", value)} />
-                <ColorControl label={t("Practice time", "练习时间")} value={draft.darkDashboardPracticeCard} onChange={(value) => update("darkDashboardPracticeCard", value)} />
-                <ColorControl label={t("Skills mastered", "已掌握技能")} value={draft.darkDashboardSkillsCard} onChange={(value) => update("darkDashboardSkillsCard", value)} />
+                {cardRoleControl("darkDashboardCourseCard", t("Current course", "当前课程"))}
+                {cardRoleControl("darkDashboardStreakCard", t("Current streak", "连续学习"))}
+                {cardRoleControl("darkDashboardPracticeCard", t("Practice time", "练习时间"))}
+                {cardRoleControl("darkDashboardSkillsCard", t("Skills mastered", "已掌握技能"))}
               </fieldset>
               <fieldset><legend>{t("Progress cards — dark", "学习进度卡片 — 深色")}</legend>
-                <ColorControl label={t("Practice metric", "练习指标")} value={draft.darkProgressPracticeCard} onChange={(value) => update("darkProgressPracticeCard", value)} />
-                <ColorControl label={t("Tasks metric", "任务指标")} value={draft.darkProgressTasksCard} onChange={(value) => update("darkProgressTasksCard", value)} />
-                <ColorControl label={t("Weekly goal", "每周目标")} value={draft.darkProgressGoalCard} onChange={(value) => update("darkProgressGoalCard", value)} />
-                <ColorControl label={t("Learning chart", "学习图表")} value={draft.darkProgressChartCard} onChange={(value) => update("darkProgressChartCard", value)} />
-                <ColorControl label={t("Achievement 1", "成就 1")} value={draft.darkProgressAchievement1} onChange={(value) => update("darkProgressAchievement1", value)} />
-                <ColorControl label={t("Achievement 2", "成就 2")} value={draft.darkProgressAchievement2} onChange={(value) => update("darkProgressAchievement2", value)} />
-                <ColorControl label={t("Achievement 3", "成就 3")} value={draft.darkProgressAchievement3} onChange={(value) => update("darkProgressAchievement3", value)} />
-                <ColorControl label={t("Achievement 4", "成就 4")} value={draft.darkProgressAchievement4} onChange={(value) => update("darkProgressAchievement4", value)} />
+                {cardRoleControl("darkProgressPracticeCard", t("Practice metric", "练习指标"))}
+                {cardRoleControl("darkProgressTasksCard", t("Tasks metric", "任务指标"))}
+                {cardRoleControl("darkProgressGoalCard", t("Weekly goal", "每周目标"))}
+                {cardRoleControl("darkProgressChartCard", t("Learning chart", "学习图表"))}
+                {cardRoleControl("darkProgressAchievement1", t("Achievement 1", "成就 1"))}
+                {cardRoleControl("darkProgressAchievement2", t("Achievement 2", "成就 2"))}
+                {cardRoleControl("darkProgressAchievement3", t("Achievement 3", "成就 3"))}
+                {cardRoleControl("darkProgressAchievement4", t("Achievement 4", "成就 4"))}
               </fieldset>
             </>
           )}
           <div className="advanced-save-actions">
             <Button type="button" variant="outline" onClick={() => router.push("/dashboard")}>{t("Preview site", "预览网站")}</Button>
-            <Button type="button" onClick={() => void save()} disabled={saving}>{saving ? t("Saving…", "保存中…") : t("Save site-wide to repo", "保存全站设置到仓库")}</Button>
-            <Button type="button" variant="outline" onClick={reset}>{t("Reset draft to defaults", "将草稿重置为默认值")}</Button>
+            <Button render={<a href="/theme-gallery" />} variant="outline">{t("Open UI gallery", "打开界面组件画廊")}</Button>
+            <Button type="button" onClick={() => void save()} disabled={saving} aria-busy={saving}>{saving ? t("Saving…", "保存中…") : t("Save site-wide to repo", "保存全站设置到仓库")}</Button>
+            <Button type="button" variant="outline" onClick={reset}>{t("Reset all four drafts", "重置全部四套草稿")}</Button>
             <Button type="button" variant="ghost" onClick={discard}>{t("Discard preview", "放弃预览")}</Button>
             {saved && <span role="status">{t("Saved to app/lib/site-ui-customization.json. Commit and push this file to share the theme.", "已保存到 app/lib/site-ui-customization.json。提交并推送此文件即可共享主题。")}</span>}
             {saveError && <span className="advanced-save-error" role="alert">{t(saveError, "无法保存主题文件。请在本地运行 npm run dev 后重试。")}</span>}
@@ -276,12 +349,71 @@ export function AdvancedUiSettings({ t }: { t: Translate }) {
         </aside>
 
         <div className="component-catalog">
-          <Card as="section" className="component-preview-card"><h3>{t("Buttons", "按钮")}</h3><div className="component-preview-row"><Button>{t("Primary", "主要")}</Button><Button variant="secondary">{t("Secondary", "次要")}</Button><Button variant="outline">{t("Outline", "轮廓")}</Button><Button variant="destructive">{t("Delete", "删除")}</Button></div></Card>
-          <Card as="section" className="component-preview-card"><h3>{t("Learning Path buttons", "学习路径按钮")}</h3><p className="advanced-control-description">{t("Hover over or tab to a button to preview its focused color.", "将鼠标悬停在按钮上，或按 Tab 键聚焦按钮，以预览聚焦颜色。")}</p><div className="component-preview-row"><Button className="learning-path-button" variant="outline" type="button">{t("Previous", "上一节")}</Button><Button className="learning-path-button" variant="outline" type="button">{t("Next", "下一节")}</Button><Button className="learning-path-button" variant="outline" type="button">{t("Mark lesson complete", "标记本节已学完")}</Button></div></Card>
-          <Card as="section" className="component-preview-card"><h3>{t("Form controls", "表单控件")}</h3><div className="component-preview-form"><Input aria-label={t("Text field preview", "文本框预览")} placeholder={t("Click to test the focus border", "点击测试聚焦边框")} /><Select aria-label={t("Select preview", "下拉框预览")} defaultValue="one"><option value="one">{t("Select option", "选择选项")}</option><option value="two">{t("Another option", "另一个选项")}</option></Select><label><Checkbox defaultChecked /> {t("Checkbox", "复选框")}</label></div></Card>
-          <Card as="section" className="component-preview-card"><h3>{t("Status and feedback", "状态与反馈")}</h3><div className="component-preview-row"><Badge>{t("Badge", "徽章")}</Badge><Badge variant="secondary">{t("Secondary", "次要")}</Badge><Avatar><AvatarFallback>AI</AvatarFallback></Avatar></div><Progress value={64} /><Alert><AlertTitle>{t("Alert title", "提醒标题")}</AlertTitle><AlertDescription>{t("Reusable feedback message preview.", "可复用反馈消息预览。")}</AlertDescription></Alert></Card>
-          <Card as="section" className="component-preview-card"><h3>{t("Loading states", "加载状态")}</h3><div className="component-skeleton-preview"><Skeleton /><Skeleton /><Skeleton /></div></Card>
-          <Card as="section" className="component-preview-card"><h3>{t("Overlays", "浮层组件")}</h3><div className="component-preview-row"><Button variant="outline" type="button" onClick={() => setDialogOpen(true)}>{t("Open dialog", "打开对话框")}</Button><DropdownMenu><DropdownMenuTrigger render={<Button variant="outline" />}>{t("Open menu", "打开菜单")}</DropdownMenuTrigger><DropdownMenuContent><DropdownMenuItem>{t("Menu item", "菜单项")}</DropdownMenuItem><DropdownMenuItem variant="destructive">{t("Destructive item", "危险操作")}</DropdownMenuItem></DropdownMenuContent></DropdownMenu></div></Card>
+          <Card as="section" className="component-preview-card" uiRole="theme-preview">
+            <h3>{t("Dashboard card colors", "仪表板卡片颜色")}</h3>
+            <div className="theme-role-grid">
+              <Card as="article" className="theme-role-card" uiRole="dashboard-course">{t("Current course", "当前课程")}</Card>
+              <Card as="article" className="theme-role-card" uiRole="dashboard-stat" data-ui-tone="streak">{t("Current streak", "连续学习")}</Card>
+              <Card as="article" className="theme-role-card" uiRole="dashboard-stat" data-ui-tone="practice">{t("Practice time", "练习时间")}</Card>
+              <Card as="article" className="theme-role-card" uiRole="dashboard-stat" data-ui-tone="skills">{t("Skills mastered", "已掌握技能")}</Card>
+            </div>
+          </Card>
+          <Card as="section" className="component-preview-card" uiRole="theme-preview">
+            <h3>{t("Progress card colors", "学习进度卡片颜色")}</h3>
+            <div className="theme-role-grid">
+              <Card as="article" className="theme-role-card" uiRole="analytics-metric" data-ui-tone="practice">{t("Practice metric", "练习指标")}</Card>
+              <Card as="article" className="theme-role-card" uiRole="analytics-metric" data-ui-tone="tasks">{t("Tasks metric", "任务指标")}</Card>
+              <Card as="article" className="theme-role-card" uiRole="analytics-metric" data-ui-tone="goal">{t("Weekly goal", "每周目标")}</Card>
+              <Card as="article" className="theme-role-card" uiRole="analytics-chart">{t("Learning chart", "学习图表")}</Card>
+              {[1, 2, 3, 4].map((index) => <Card as="article" className="theme-role-card" uiRole="analytics-achievement" data-ui-tone={index} key={index}>{t(`Achievement ${index}`, `成就 ${index}`)}</Card>)}
+            </div>
+          </Card>
+          <Card as="section" className="component-preview-card" uiRole="theme-preview">
+            <h3>{t("Buttons", "按钮")}</h3>
+            <p className="advanced-control-description">{t("Hover or tab through the buttons to inspect their interaction states.", "将鼠标悬停或按 Tab 键，查看按钮的交互状态。")}</p>
+            <div className="component-preview-row">
+              <Button>{t("Primary", "主要")}</Button>
+              <Button variant="secondary">{t("Secondary", "次要")}</Button>
+              <Button variant="outline">{t("Outline", "轮廓")}</Button>
+              <Button variant="ghost">{t("Ghost", "透明")}</Button>
+              <Button variant="link">{t("Link", "链接")}</Button>
+              <Button variant="destructive">{t("Delete", "删除")}</Button>
+              <Button disabled>{t("Disabled", "禁用")}</Button>
+              <Button variant="outline" data-ui-role="theme-state-sample" data-ui-state="pressed">{t("Pressed", "按下")}</Button>
+              <Button variant="outline" data-ui-role="theme-state-sample" aria-pressed="true">{t("Selected", "已选中")}</Button>
+              <Button disabled aria-busy="true">{t("Saving…", "保存中……")}</Button>
+            </div>
+          </Card>
+          <Card as="section" className="component-preview-card" uiRole="theme-preview">
+            <h3>{t("Page button roles", "页面按钮角色")}</h3>
+            <div className="component-preview-row">
+              <Button variant="ghost" data-ui-role="range-option" aria-pressed="true">{t("30 days", "30 天")}</Button>
+              <Button variant="ghost" data-ui-role="range-option" aria-pressed="false">{t("All time", "全部时间")}</Button>
+              <Button variant="ghost" data-ui-role="course-lesson-option" aria-current="step">{t("Current lesson", "当前课程")}</Button>
+              <div role="radiogroup" aria-label={t("Quiz answer preview", "测验答案预览")}><Button variant="outline" data-ui-role="course-quiz-option" role="radio" aria-checked="true"><span>A</span>{t("Selected answer", "已选答案")}</Button></div>
+              <Button variant="outline" data-ui-role="settings-toggle">{t("Settings toggle", "设置切换")}</Button>
+              <Button variant="outline" data-ui-role="auth-provider" disabled>{t("Provider disabled", "服务商不可用")}</Button>
+            </div>
+          </Card>
+          <Card as="section" className="component-preview-card" uiRole="theme-preview"><h3>{t("Learning Path buttons", "学习路径按钮")}</h3><p className="advanced-control-description">{t("Hover over or tab to a button to preview its focused color.", "将鼠标悬停在按钮上，或按 Tab 键聚焦按钮，以预览聚焦颜色。")}</p><div className="component-preview-row"><Button className="learning-path-button" variant="outline" type="button">{t("Previous", "上一节")}</Button><Button className="learning-path-button" variant="outline" type="button">{t("Next", "下一节")}</Button><Button className="learning-path-button" variant="outline" type="button">{t("Mark lesson complete", "标记本节已学完")}</Button></div></Card>
+          <Card as="section" className="component-preview-card" uiRole="theme-preview">
+            <h3>{t("Form controls", "表单控件")}</h3>
+            <div className="component-preview-form">
+              <Input aria-label={t("Text field preview", "文本框预览")} placeholder={t("Click to test the focus border", "点击测试聚焦边框")} />
+              <Select aria-label={t("Select preview", "下拉框预览")} defaultValue="one"><option value="one">{t("Select option", "选择选项")}</option><option value="two">{t("Another option", "另一个选项")}</option></Select>
+              <label><Checkbox defaultChecked /> {t("Checkbox", "复选框")}</label>
+              <label><Checkbox aria-invalid="true" /> {t("Invalid checkbox", "无效复选框")}</label>
+              <Slider aria-label={t("Slider preview", "滑块预览")} defaultValue={40} />
+              <Input aria-label={t("Invalid field preview", "无效字段预览")} aria-invalid="true" defaultValue={t("Invalid value", "无效值")} />
+              <Input aria-label={t("Read-only field preview", "只读字段预览")} defaultValue={t("Read-only value", "只读内容")} readOnly />
+              <Input aria-label={t("Disabled field preview", "禁用字段预览")} disabled value={t("Disabled field", "禁用字段")} readOnly />
+              <Select aria-label={t("Disabled select preview", "禁用下拉框预览")} disabled defaultValue="one"><option value="one">{t("Disabled select", "禁用下拉框")}</option></Select>
+            </div>
+          </Card>
+          <Card as="section" className="component-preview-card" uiRole="theme-preview"><h3>{t("Status and feedback", "状态与反馈")}</h3><div className="component-preview-row"><Badge>{t("Badge", "徽章")}</Badge><Badge variant="secondary">{t("Secondary", "次要")}</Badge><Badge data-ui-tone="success">{t("Complete", "已完成")}</Badge><Badge data-ui-tone="warning">{t("Needs review", "需要复习")}</Badge><Badge variant="destructive">{t("Error", "错误")}</Badge><Avatar><AvatarFallback>AI</AvatarFallback></Avatar></div><Progress value={64} /><Alert><AlertTitle>{t("Alert title", "提醒标题")}</AlertTitle><AlertDescription>{t("Reusable feedback message preview.", "可复用反馈消息预览。")}</AlertDescription></Alert><Alert variant="destructive"><AlertTitle>{t("Error alert", "错误提醒")}</AlertTitle><AlertDescription>{t("Try again after checking the details.", "检查详情后重试。")}</AlertDescription></Alert></Card>
+          <Card as="section" className="component-preview-card" uiRole="theme-preview"><h3>{t("Loading states", "加载状态")}</h3><div className="component-skeleton-preview"><Skeleton /><Skeleton /><Skeleton /></div></Card>
+          <Card as="section" className="component-preview-card" uiRole="theme-preview"><h3>{t("Code surface", "代码面板")}</h3><pre className="component-code-preview" data-ui-role="code-surface"><code>{"score = 10\nprint(score)"}</code></pre></Card>
+          <Card as="section" className="component-preview-card" uiRole="theme-preview"><h3>{t("Overlays", "浮层组件")}</h3><div className="component-preview-row"><Button variant="outline" type="button" onClick={() => setDialogOpen(true)}>{t("Open dialog", "打开对话框")}</Button><DropdownMenu><DropdownMenuTrigger render={<Button variant="outline" />}>{t("Open menu", "打开菜单")}</DropdownMenuTrigger><DropdownMenuContent><DropdownMenuItem>{t("Menu item", "菜单项")}</DropdownMenuItem><DropdownMenuItem variant="destructive">{t("Destructive item", "危险操作")}</DropdownMenuItem></DropdownMenuContent></DropdownMenu></div></Card>
         </div>
       </div>
 

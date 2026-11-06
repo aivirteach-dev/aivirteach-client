@@ -224,9 +224,9 @@ export default function CoursesPage() {
           {orderedCourses.map((course) => {
             const card = courseCardState(statusByCourse[course.id], activeCourseId === course.id);
             return (
-              <Card as="article" className={"catalog-card " + (card.isCurrent ? "active" : "")} key={course.id}>
+              <Card as="article" className={"catalog-card " + (card.isCurrent ? "active" : "")} uiRole="catalog-course" key={course.id}>
                 {course.coverAssetId ? (
-                  <div className="catalog-image-wrap">
+                  <div className="catalog-image-wrap" data-ui-role="catalog-media">
                     <img className="catalog-image" src={courseAssetUrl(course.id, course.coverAssetId)} alt={`Preview of ${course.title}`} />
                     <Button
                       className="catalog-image-enlarge"
@@ -242,7 +242,7 @@ export default function CoursesPage() {
                       <span aria-hidden="true" />
                     </Button>
                   </div>
-                ) : <div className={"catalog-art " + course.tone} aria-hidden="true"><span /></div>}
+                ) : <div className={"catalog-art " + course.tone} data-ui-role="catalog-art" aria-hidden="true"><span /></div>}
                 <div className="catalog-copy">
                   <div className="catalog-course-info">
                     <div className="catalog-label-row">
@@ -257,9 +257,9 @@ export default function CoursesPage() {
                     <div className="catalog-meta"><span>{course.level}</span></div>
                   </div>
                   <div className="catalog-actions">
-                    {card.actions.includes("restart") && <Button className="restart-course-button" variant="destructive" size="lg" type="button" onClick={() => setRestartCourseTarget(course)} disabled={starting}>{t("Restart course", "重新开始课程")}</Button>}
-                    {card.actions.includes("continue") && <Button className="continue-course-button" variant="secondary" size="lg" type="button" onClick={() => selectCourse(course)} disabled={starting}>{t("Continue course", "继续课程")}</Button>}
-                    {card.actions.includes("start") && <Button className="primary-button" size="lg" type="button" onClick={() => selectCourse(course)} disabled={starting}>{t("Start course", "开始课程")}</Button>}
+                    {card.actions.includes("restart") && <Button className="restart-course-button" data-ui-role="course-restart" variant="destructive" size="lg" type="button" onClick={() => setRestartCourseTarget(course)} disabled={starting}>{t("Restart course", "重新开始课程")}</Button>}
+                    {card.actions.includes("continue") && <Button className="continue-course-button" data-ui-role="course-continue" variant="secondary" size="lg" type="button" onClick={() => selectCourse(course)} disabled={starting}>{t("Continue course", "继续课程")}</Button>}
+                    {card.actions.includes("start") && <Button className="primary-button" data-ui-role="course-start" size="lg" type="button" onClick={() => selectCourse(course)} disabled={starting}>{t("Start course", "开始课程")}</Button>}
                   </div>
                 </div>
               </Card>
@@ -276,7 +276,7 @@ export default function CoursesPage() {
             <DialogDescription id="course-confirm-description">{pendingCourse.localOnly ? t("This short practice course runs entirely in your browser. Progress and learning analytics are saved only on this device.", "这门短期练习课程完全在浏览器中运行，进度和学习分析仅保存在此设备上。") : t(`${pendingIsResume ? "Switching to this course" : "Starting a new course"} will pause your current course. ${pauseLabWarning}`, `${pendingIsResume ? "切换到此课程" : "开始新课程"}将暂停当前课程。${pauseLabWarning}`)}</DialogDescription>
             <div className="course-confirm-actions">
               <Button variant="outline" size="lg" type="button" onClick={() => setPendingCourse(null)} disabled={starting}>{t("Cancel", "取消")}</Button>
-              <Button className="primary-button" size="lg" type="button" onClick={() => void confirmStartCourse()} disabled={starting} ref={confirmButtonRef}>{starting ? (pendingIsResume ? t("Switching...", "正在切换……") : t("Starting...", "正在开始……")) : (pendingIsResume ? t("Switch course", "切换课程") : t("Start new course", "开始新课程"))}</Button>
+              <Button className="primary-button" data-ui-role="course-confirm" size="lg" type="button" onClick={() => void confirmStartCourse()} disabled={starting} aria-busy={starting} ref={confirmButtonRef}>{starting ? (pendingIsResume ? t("Switching...", "正在切换……") : t("Starting...", "正在开始……")) : (pendingIsResume ? t("Switch course", "切换课程") : t("Start new course", "开始新课程"))}</Button>
             </div>
           </DialogContent>
         )}
@@ -290,14 +290,14 @@ export default function CoursesPage() {
             {restartError && <Alert className="auth-error" variant="destructive" role="alert">{restartError}</Alert>}
             <div className="course-confirm-actions">
               <Button variant="outline" size="lg" type="button" onClick={() => setRestartCourseTarget(null)} disabled={restarting}>{t("Cancel", "取消")}</Button>
-              <Button className="restart-confirm-button" variant="destructive" size="lg" type="button" onClick={() => void confirmRestartCourse()} disabled={restarting} ref={restartConfirmButtonRef}>{restarting ? t("Restarting...", "正在重新开始……") : restartRetryCourseId === restartCourseTarget.id ? t("Retry same restart", "重试同一条命令") : t("Restart course", "重新开始课程")}</Button>
+              <Button className="restart-confirm-button" data-ui-role="course-restart-confirm" variant="destructive" size="lg" type="button" onClick={() => void confirmRestartCourse()} disabled={restarting} aria-busy={restarting} ref={restartConfirmButtonRef}>{restarting ? t("Restarting...", "正在重新开始……") : restartRetryCourseId === restartCourseTarget.id ? t("Retry same restart", "重试同一条命令") : t("Restart course", "重新开始课程")}</Button>
             </div>
           </DialogContent>
         )}
       </Dialog>
       <Dialog open={Boolean(previewCourse?.coverAssetId)} onOpenChange={(open) => { if (!open) closePreview(); }}>
         {previewCourse?.coverAssetId && (
-          <DialogContent className="catalog-image-dialog" showCloseButton={false} aria-label={`Preview of ${previewCourse.title}`}>
+          <DialogContent className="catalog-image-dialog" data-ui-role="media-lightbox" showCloseButton={false} aria-label={`Preview of ${previewCourse.title}`}>
             <Button className="catalog-image-close" variant="ghost" size="icon" type="button" onClick={closePreview} aria-label="Close enlarged image" ref={previewCloseRef}><span aria-hidden="true" /></Button>
             <img src={courseAssetUrl(previewCourse.id, previewCourse.coverAssetId)} alt={`Preview of ${previewCourse.title}`} />
           </DialogContent>

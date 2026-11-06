@@ -61,7 +61,7 @@ export function CopyButton({ text }: CopyButtonProps) {
       : result.clipboardCopied ? "Copied" : "Copy failed");
   }
 
-  return <Button variant="outline" size="xs" type="button" className="lesson-copy-button" aria-label="Copy code to clipboard" onClick={copy}>
+  return <Button variant="outline" size="xs" type="button" className="lesson-copy-button" data-ui-role="lesson-copy" aria-label="Copy code to clipboard" onClick={copy}>
     {state}
   </Button>;
 }
@@ -71,7 +71,7 @@ export function CodeBlock({ props }: BlockProps<CodeModel>) {
     : props.kind === "file" ? `FILE  ${props.label ?? ""}`
       : props.language ?? "";
 
-  return <div className="lesson-code-block" data-kind={props.kind}>
+  return <div className="lesson-code-block" data-ui-role="code-surface" data-kind={props.kind}>
     <header><span>{heading}</span><CopyButton text={props.code} /></header>
     <pre><code>{props.code}</code></pre>
     {props.description ? <p>{renderInline(props.description)}</p> : null}

@@ -1,6 +1,6 @@
 # AIVirTeach frontend
 
-React 19 and TypeScript frontend built with the Next.js App Router through Vinext.
+The AIVirTeach web client: login, dashboard, course catalog, the Learning Lab (lessons, remote desktop, AI tutor chat), progress analytics, and settings. Built with React 19 and TypeScript on the Next.js App Router, run through Vinext (Vite) and deployed as a Cloudflare Worker.
 
 ## Start locally
 
@@ -9,78 +9,108 @@ npm install
 npm run dev
 ```
 
-Open `http://localhost:3001`. The port is fixed in `vite.config.ts`.
+Open http://localhost:3001 (the port is fixed in `vite.config.ts`) and log in with an account from the deployed server. New users activate their account at `/create-account` with the one-time invitation token AIVirTeach gives them.
 
-Backend selection is controlled by one value in the ignored `.env.local`:
+## Backend
+
+The client talks to the **AIVirTeach control-plane server**, deployed at `https://aivirteach-server.vercel.app/api/v1`. Its source is in `../server-architecture-source/aivirteach-server-main`; API docs are at `https://aivirteach-server.vercel.app/docs`.
+
+Selection is in the ignored `.env.local` (see `.env.example` for every value):
 
 ```dotenv
-NEXT_PUBLIC_BACKEND_MODE=local
+NEXT_PUBLIC_BACKEND_MODE=remote
+NEXT_PUBLIC_REMOTE_API_BASE_URL=/api/v1
 ```
 
-Use `local` for `http://localhost:4000/api/v1`, or change it to `remote` for `https://aivirteach-server.vercel.app/api/v1`. Restart `npm run dev` after changing it. The URLs can be customized with `NEXT_PUBLIC_LOCAL_API_BASE_URL` and `NEXT_PUBLIC_REMOTE_API_BASE_URL`; `.env.example` contains the complete configuration.
+- **Remote mode** (current setup). The base URL is the relative `/api/v1`, and the dev server proxies it to the Vercel server (`server.proxy` in `vite.config.ts`). The browser stays on `localhost:3001`, so the server's CORS list doesn't matter in development. Login is email and password with JWT access tokens and rotating refresh tokens; `app/lib/api.ts` refreshes the token shortly before it expires and retries once on a 401.
+- **Local mode** (`NEXT_PUBLIC_BACKEND_MODE=local`). Calls `http://localhost:4000/api/v1`, the older demo API in `../backend`, which you start yourself. There is no real login: the email picks one of three seeded learners, sent as the `X-Demo-User-Id` header.
 
-Local mode uses the demo-account picker and `X-Demo-User-Id` contract. Remote mode uses invitation-based JWT login, refresh-token rotation, account activation, and logout.
+If neither is set, development defaults to local and production builds default to remote (`app/lib/config.ts`). Restart `npm run dev` after changing `.env.local`, because `NEXT_PUBLIC_*` values are compiled in.
 
-The deployed control plane currently exposes health and invitation-based JWT authentication. Login, access-token refresh, account activation, and logout are connected. Dashboard, courses, progress, and chat routes are not yet exposed by that server, so authenticated users see the frontend's local demo learning data for those areas until the matching APIs are deployed.
+If a learning-data route returns 404, `useLearnerProfile` falls back to the built-in demo profile (`app/lib/mock-profile.ts`) instead of failing.
 
-The server allows the frontend development origin `http://localhost:3001` through CORS. If you change the local frontend port, add that origin to the backend's `CORS_ORIGINS` setting.
+## Routes
 
-## Application entry points
+| Route | File | What it is |
+|---|---|---|
+| `/` | `app/page.tsx` | Redirects to `/login` |
+| `/login` | `app/login/page.tsx` | Login |
+| `/create-account` | `app/create-account/page.tsx` | Activate an invited account |
+| `/dashboard` | `app/dashboard/page.tsx` | Dashboard and notifications |
+| `/courses` | `app/courses/page.tsx` | Course catalog and active-course selection |
+| `/courses/welcome` | `app/courses/welcome/page.tsx` | Course welcome before starting |
+| `/courses/python-basics` | `app/courses/python-basics/page.tsx` | Demo course |
+| `/workspace` | `app/workspace/page.tsx` | Learning Lab |
+| `/analysis`, `/analysis/v2` | `app/analysis/` | Progress analytics (two layouts) |
+| `/settings` | `app/settings/page.tsx` | Settings, including the Advanced theme editor |
+| `/settings/profile` | `app/settings/profile/page.tsx` | Learner profile |
+| `/preview/lesson` | `app/preview/lesson/page.tsx` | Lesson preview the admin app shows in a frame (`NEXT_PUBLIC_ADMIN_ORIGIN`) |
+| `/theme-gallery` | `app/theme-gallery/page.tsx` | Live gallery of themed components with an editor |
 
-- `app/layout.tsx` — root HTML layout, metadata, favicon, and global stylesheet.
-- `app/page.tsx` — `/`; currently redirects visitors to `/login`.
-- `worker/index.ts` — hosted Cloudflare Worker request entry point.
-- `vite.config.ts` — Vinext/Vite development and build configuration.
+`/theme-gallery.html` only redirects to `/theme-gallery`.
 
-## Pages you can edit
+## Where things live
 
-- `app/login/page.tsx` — login screen.
-- `app/dashboard/page.tsx` — dashboard and notifications.
-- `app/courses/page.tsx` — course catalog and active-course selection.
-- `app/workspace/page.tsx` — Learning Lab, editor, and AI tutor chat.
-- `app/analysis/page.tsx` — Progress analytics.
-- `app/settings/page.tsx` — application settings.
-- `app/settings/profile/page.tsx` — learner profile settings.
+**App shell and shared UI**
+- `app/layout.tsx` — root layout. Mounts the preference components (theme, style, UI customization, scrollbar, language) that set attributes on `<html>`.
+- `app/components/` — app-level components: `Sidebar`, `AccountMenu`, `NotificationMenu`, `TopbarSearch`, `CourseLessonView`, `LessonBlocks`, and the theme editor `AdvancedUiSettings`.
+- `components/ui/` — shared primitives (Button, Card, Input, Select, Dialog, and so on) in the shadcn style.
+- `app/globals.css` — global styles and theme variables. `app/components/course-lesson.css` and `app/theme-gallery/theme-gallery.css` cover their own areas.
 
-## Shared code you can edit
+**Data and API**
+- `app/lib/config.ts` — backend mode and base URL.
+- `app/lib/api.ts` — typed API client, token storage and refresh, and the demo-user header.
+- `app/hooks/useLearnerProfile.ts` — the signed-in learner's profile, dashboard, and notifications.
+- `app/lib/courses.ts`, `app/lib/mock-course.ts`, `app/lib/mock-profile.ts` — course helpers and demo data.
+- `app/lib/language.ts` — English and Chinese strings (`localize`).
 
-- `app/globals.css` — colors, spacing, layouts, dark mode, and responsive styles.
-- `app/components/Sidebar.tsx` — shared navigation and collapse behavior.
-- `app/components/Avatar.tsx` — reusable avatar rendering.
-- `app/hooks/useLearnerProfile.ts` — backend learner state and mutations.
-- `app/lib/api.ts` — typed NestJS API client and demo-user header selection.
-- `app/lib/mock-profile.ts` — default demo data shown in the UI.
-- `app/lib/courses.ts` — course catalog and active-course storage helpers.
-- `public/` — logos, icons, chart images, and other browser assets.
+**Learning Lab (`app/workspace/`)**
+- `workspace-v2.tsx` — the page itself: layout, the teacher and learning-path tabs, the floating prompt.
+- `use-course-learning-session.ts`, `use-lesson-selection.ts`, `use-learning-progress.ts` — course, lesson, and progress state.
+- `use-console-session.ts`, `console-session.ts`, `console-viewer.tsx` — starting and showing the remote desktop. `heartbeat.ts` keeps the workspace alive while the tab is visible.
+- `use-tutor-request.ts`, `use-chat-messages.ts`, `chat-message-controller.ts`, `tutor-message.tsx` — AI tutor chat, including streamed replies.
+
+## Theme system
+
+The site has two visual styles, **Modern V2** (`v2`) and **Neobrutalism** (`neubrutal`), each with a **Light** and **Dark** palette: four combinations in total. Neobrutal Light is the default.
+
+- `app/lib/site-ui-customization.json` — the saved site theme: style values per style, colors per style and mode, and the default combination. Changes to this file are committed with the code.
+- `app/lib/theme-presets.ts` — schema, defaults, and validation for that file.
+- `app/lib/theme-style.ts`, `app/lib/interface-version.ts`, `app/lib/theme.ts` — the selected style and mode. Old saved styles (`v1`, `soft`, `soft-brutal`, `brutal`) are mapped to the two current ones.
+- `app/lib/ui-customization.ts` — turns the active values into CSS variables on the page.
+- `app/components/AdvancedUiSettings.tsx` (Settings → Advanced) and `/theme-gallery` — editors. Edits preview live in the browser; **Save** writes `site-ui-customization.json` through a route that only exists while `npm run dev` is running (`build/site-theme-writer.ts`).
+
+The design inventory and the element-to-theme-setting map are in `docs/ui-inventory.md` and `docs/ui-theme-role-map.md`.
+
+## Progress and notes
+
+- `tasks-md-list/` — one Markdown plan per piece of work, with a checklist and status.
+- `docs/verification/` — dated notes from checking finished work.
 
 ## Usually leave these alone
 
-- `worker/`, `build/`, `.openai/`, and `vite.config.ts` — runtime and hosting integration.
-- `db/`, `drizzle/`, and `drizzle.config.ts` — future database schema and migrations.
-- `examples/` — optional reference implementation, not part of the active UI.
-- `package-lock.json` — generated dependency lockfile.
+- `worker/`, `build/`, `.openai/`, `vite.config.ts`, `scripts/` — runtime, build, and hosting integration.
+- `db/`, `drizzle/`, `drizzle.config.ts` — Worker database schema and migrations, not yet used by the app.
+- `examples/`, `reference/` — reference material, not part of the running app.
+- `dist/`, `.vinext/`, `.wrangler/`, `work/` — generated output.
+- `package-lock.json` — generated lockfile.
 
-## Useful commands
+## Commands
 
 ```powershell
-npm run dev
-npm run build
-npm test
+npm run dev          # dev server on :3001
+npm run test:unit    # Vitest unit tests
+npm test             # unit tests, production build, then rendered-page checks
 npm run lint
+npm run build
 ```
+
+`npm run typecheck` generates Cloudflare Worker types into `work/` and then runs `tsc`. Its `mkdir -p` step needs a POSIX shell such as Git Bash; once `work/worker-types.d.ts` exists, `npx tsc --noEmit` works from any shell.
 
 ## Deploy the production Cloudflare client
 
-Run `npm run deploy:cloudflare` after `npm ci` and `wrangler login`.
-The command builds for the existing `aivir-client-pr` Worker, verifies the generated
-preview response, then deploys it. It preserves existing Worker variables.
+Run `npm run deploy:cloudflare` after `npm ci` and `wrangler login`. It builds for the existing `aivir-client-pr` Worker, checks the generated preview response, then deploys it, keeping existing Worker variables.
 
-Production public addresses live in `scripts/build-cloudflare.mjs`. They are set
-before compilation because `NEXT_PUBLIC_*` values are embedded in browser bundles.
-The preview accepts messages and framing from `https://aivirteach-admin.vercel.app`.
-The client uses the API at `https://aivirteach-server.vercel.app/api/v1`.
-To change these addresses, update the build script and the artifact verification.
+Production public addresses live in `scripts/build-cloudflare.mjs`. They are set before compilation because `NEXT_PUBLIC_*` values are embedded in browser bundles. The preview accepts messages and framing from `https://aivirteach-admin.vercel.app`, and the client uses the API at `https://aivirteach-server.vercel.app/api/v1`. To change these addresses, update the build script and its verification together.
 
-`npm run build:cloudflare` builds and verifies without deploying. The check rejects
-an incorrect Worker target, missing bindings, a blocked preview CSP, or an absent
-admin message origin. Local `npm run dev` still uses `.env.local` and local bindings.
+`npm run build:cloudflare` builds and verifies without deploying. The check rejects a wrong Worker target, missing bindings, a blocked preview CSP, or a missing admin message origin. Local `npm run dev` still uses `.env.local` and local bindings.
