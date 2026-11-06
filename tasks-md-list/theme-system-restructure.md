@@ -15,7 +15,7 @@ Scope: routes outside Learning Lab, shared navigation, and the Advanced Settings
 - [x] Audit the non-Learning-Lab pages and shared UI: 21 Card contexts, 12 button jobs, 13 Input declarations, and the other controls in the inventory.
 - [x] Create the working branch `feature/theme-system-restructure` from `docs/ui-theme-taxonomy`.
 - [x] Review and preserve the existing uncommitted Learning Lab work before changing UI code.
-- [x] Build a standalone [UI theme gallery](../public/theme-gallery.html) of the non-Learning-Lab component families. Its controls preview Modern V2 and Neobrutalism in Light and Dark using the current saved palette snapshot; it is a reference template, not a live editor for the repository JSON.
+- [x] Build a [live UI theme gallery](../app/theme-gallery/page.tsx) of the non-Learning-Lab component families. It keeps the original gallery's sticky toolbar, section navigation, and component grid, while using website Card and control components, production page classes, and shared theme values. A compact editor previews and saves supported values through the site-wide theme JSON. An app route redirects the old `/theme-gallery.html` URL; visual parity for each sample remains part of section 5.
 - [ ] Record the current appearance of each audited route in Modern V2 and Neobrutal Light/Dark as a comparison baseline. Browser access is currently unavailable in this workspace, so screenshots and visual comparisons are pending.
 - [ ] Complete a mapping of `route/component → current selector → semantic role → theme setting`, including custom card-like panels. The Card map is recorded; remaining custom surfaces are listed for the next wiring pass.
 
@@ -24,7 +24,7 @@ Scope: routes outside Learning Lab, shared navigation, and the Advanced Settings
 - [x] Define a typed theme schema with two style IDs: the existing `v2` (displayed as Modern V2) and `neubrutal`.
 - [ ] Define style values for border width, radius, shadow, spacing, and typography. The schema now separates 15 style values from the four color palettes, including shared button, field, and Card border widths. Page-specific shadow and typography rules still need consolidation.
 - [x] Define Light and Dark palettes for each style. Four separate palettes now include page, surface, text, border, primary, and secondary colors, and the active palette feeds the shared CSS foundation tokens.
-- [ ] Define component defaults and named role overrides for cards, buttons, fields, status elements, overlays, and content blocks. A role inherits its component default unless it has an explicit value.
+- [ ] Define component defaults and named role overrides for cards, buttons, fields, status elements, overlays, and content blocks. A role inherits its component default unless it has an explicit value. The live gallery currently edits shared values and named card colors; role-specific card radius, shadow, typography, and other CSS properties still need schema controls if they are to be edited there.
 - [ ] Define hover, focus, pressed, selected, disabled, error, and loading states where relevant.
 - [x] Migrate the current flat `app/lib/site-ui-customization.json` values into the new schema, preserving the present Neobrutal colors.
 - [x] Map old stored style preferences (`v1`, `soft`, `soft-brutal`, `brutal`) to a valid remaining style and validate saved values on load.
@@ -54,17 +54,17 @@ Scope: routes outside Learning Lab, shared navigation, and the Advanced Settings
 - [x] Make the active combination and the values being edited obvious in the editor.
 - [x] Preserve unsaved drafts separately while switching among the four combinations.
 - [x] Group controls by foundation, app shell, cards, buttons, fields, status/data, overlays, and content. The status/data group now edits success, warning, error, progress track, and skeleton colors in each palette.
-- [x] Preview shared defaults and role-specific examples, including Dashboard and Progress cards and all button states. The editor now shows six variants, pressed, selected, disabled, loading, range, lesson, quiz, settings, and provider examples, plus invalid and disabled fields. Visual comparison remains in section 5.
-- [ ] Keep the live page preview in sync with the editor draft.
-- [ ] Save all four presets and the selected site default to the repository theme JSON. The local save route and persistence test pass; reload and local restart still need visual verification.
+- [x] Preview shared defaults and role-specific examples, including Dashboard and Progress cards and all button states. The editor shows six variants, pressed, selected, disabled, loading, range, lesson, quiz, settings, and provider examples, plus invalid and disabled fields. The live gallery also shows production Card classes and representative content for each audited Card role. Visual comparison remains in section 5.
+- [x] Keep the live page preview in sync with the editor draft. The root theme preference subscribes to draft, style, and mode changes; a mounted-page regression check confirms a color edit updates the page, Light/Dark switching selects the right palette, and the draft survives remounting.
+- [x] Save all four presets and the selected site default to the repository theme JSON. The local save route test writes all four combinations, reloads the file, and verifies their values and the selected default. Visual review after a local restart remains in section 5.
 
 ## 5. Verify and finish
 
 - [ ] Compare every audited route against the baseline in all four combinations: login, create account, dashboard, courses, course welcome, demo course, both analytics pages, settings, profile, and lesson preview.
-- [ ] Check responsive layouts and hover, keyboard focus, selected, disabled, error, and loading states.
-- [ ] Check text contrast and legibility on colored cards in both Light and Dark modes.
-- [x] Run the relevant frontend type, lint, build, and focused behavior checks. After adding shared border widths, TypeScript, changed-file ESLint, 255 unit tests, production build, ten rendered-route/gallery checks, and `git diff --check` pass. Rerun after the remaining component work.
-- [ ] Confirm no audited element depends on an obsolete style ID, positional card color, or an unexplained theme override.
+- [ ] Check responsive layouts and hover, keyboard focus, selected, disabled, error, and loading states. The `/theme-gallery` layout now passes an automated check (text centering, overflow, elements leaving their card, sideways scroll) at 375–1440px in all four combinations. Gallery-only fixes: Analytics V2 colors defined on the samples, mini-chart bars given a fixed-height container, Course summary and Settings row stacked in narrow columns, the V2 achievement divider removed, and the preview banner moved to the bottom so it no longer covers the toolbar. The website routes still need the same check.
+- [ ] Check text contrast and legibility on colored cards in both Light and Dark modes. Fixed: in Neobrutalism the Analytics V2 Course summary card gets the shared card surface (the `[data-slot="card"]` rule outranks its primary background) but kept its V2 light-on-blue label, description, track, and ring colors, which were nearly invisible in Neobrutal Light. Neobrutal-scoped rules in `globals.css` now use `--ink`, `--ink-soft`, `--surface-container`, and `--outline`; the card's text measures at least 9.6:1 in both Neobrutal modes, and Modern V2 is unchanged. Checked in `/theme-gallery`; `/analysis/v2` uses the same Card and classes but has not been checked while signed in.
+- [x] Run the relevant frontend type, lint, build, and focused behavior checks. After restoring the gallery layout with live components, TypeScript, changed-file ESLint, 257 unit tests, production build, 11 rendered-route/gallery checks, and `git diff --check` pass. Visual review is still pending because Windows computer use is unavailable in this workspace.
+- [ ] Confirm no audited element depends on an obsolete style ID, positional card color, or an unexplained theme override. Selector scan found only the two current production style IDs, and remaining positional selectors affect decorative elements rather than card colors. The override/cascade review remains.
 - [ ] Record any remaining exceptions in the inventory and mark this task complete only after the four combinations persist and render correctly.
 
 ## Review checkpoints
