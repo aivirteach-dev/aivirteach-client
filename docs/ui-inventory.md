@@ -1,6 +1,6 @@
 # UI inventory outside Learning Lab
 
-Audit date: 2026-10-27. Scope: all `app/**/page.tsx` routes except `/workspace`, their shared components, `app/globals.css`, `app/components/course-lesson.css`, the UI primitives, and the committed theme JSON. I also inspected the running site at `localhost:3001` on Dashboard, Courses, Progress, Settings, and Advanced Settings. Counts below are JSX declaration sites, not the number of elements after lists render. Conditional views and theme modes can show different subsets.
+Audit date: 2026-10-27. Scope: all `app/**/page.tsx` routes except `/workspace`, their shared components, `app/globals.css`, `app/components/course-lesson.css`, the UI primitives, and the committed theme JSON. I also inspected the running site at `localhost:3001` on Dashboard, Courses, Progress, Settings, and Advanced Settings. Counts below are the **starting audit snapshot** of JSX declaration sites, not the number of elements after lists render. The theme restructure has since changed the editor, navigation, and style choices; use the [theme role map](ui-theme-role-map.md) and [task list](../tasks-md-list/theme-system-restructure.md) for current implementation status.
 
 ## Routes and visible design areas
 
@@ -9,7 +9,7 @@ Audit date: 2026-10-27. Scope: all `app/**/page.tsx` routes except `/workspace`,
 | `/` | Redirects to `/login`; no UI. |
 | `/login` | Brand, decorative glows, form card, local demo account choices, email/password fields, password reveal, remember checkbox, primary submit, disabled provider buttons, text links, theme icon, error alert. |
 | `/create-account` | Same auth shell and form card, five text/password fields, terms checkbox, submit, text link, theme icon, error alert. |
-| `/dashboard` | Shared navigation, greeting, current-course card, category badge, progress bar, resume CTA, three stat cards with icon tiles. It has an inline search form in `v1`; other interface styles use the topbar search. |
+| `/dashboard` | Shared navigation, greeting, current-course card, category badge, progress bar, resume CTA, three stat cards with icon tiles. The starting audit included an inline search form in `v1`; the current two-style UI uses topbar search. |
 | `/courses` | Catalog header, image-led course cards, status badges, enlarge-image controls, start/continue/restart actions, enrollment and restart confirmation dialogs, image preview dialog, alerts. |
 | `/courses/welcome` | Full-page step window, step progress, overview image and content, walkthrough video/placeholder, back/next/start actions, no-active-course fallback card. |
 | `/courses/python-basics` | Demo course progress strip, sticky lesson outline, lesson article, code example, multiple-choice answers, correct/incorrect feedback, previous/next/check actions. |
@@ -19,7 +19,7 @@ Audit date: 2026-10-27. Scope: all `app/**/page.tsx` routes except `/workspace`,
 | `/settings/profile` | Profile summary card, name/email/role fields, save/reset/logout actions. |
 | `/preview/lesson` | Internal lesson preview, populated by a parent message. Uses the same reading-surface components as Learning Lab; included here because it is a separate route. Its 13 block types are heading, paragraph, bullet list, numbered list, code, step, callout, table, image, resource link, divider, annotated code, and diagram. |
 
-The main app shell has **two layouts**: a collapsible left sidebar for interface `v1`, and a top navigation bar for the other five interface styles. Search, notifications, and account menu live in the top bar. See [Sidebar.tsx](../app/components/Sidebar.tsx).
+At the starting audit, the app shell had a collapsible `v1` sidebar and a topbar for the other styles. The current theme branch uses the topbar in both selectable styles. Search, notifications, and account menu live there. See [Sidebar.tsx](../app/components/Sidebar.tsx).
 
 ## Counts and types
 
@@ -76,14 +76,14 @@ The six primitive variants are a starting point, but page CSS gives them differe
 
 These are **12 design jobs**, not 12 extra `Button` variants. Some jobs currently share a primitive variant but have their own CSS. The fixed class names on buttons include `primary-button`, `provider-button`, `password-toggle`, `search-button`, `restart-course-button`, `continue-course-button`, `settings-action-toggle`, `lesson-copy-button`, and several close/icon classes. Selection states use `active`, `selected`, `complete`, and `aria-current`.
 
-## Current theme architecture
+## Theme architecture at the starting audit
 
-- The committed [theme JSON](../app/lib/site-ui-customization.json) has **61 settings**: 2 modes, 47 colors, 11 numbers, and 1 boolean. It currently selects `neubrutal` and `light`.
-- Interface choices are `v1`, `v2`, `soft`, `soft-brutal`, `brutal`, and `neubrutal`; each can be paired with light/dark. Root layout and preferences apply these through HTML data attributes. See [layout.tsx](../app/layout.tsx), [interface-version.ts](../app/lib/interface-version.ts), and [ui-customization.ts](../app/lib/ui-customization.ts).
+- The [theme JSON](../app/lib/site-ui-customization.json) then had **61 settings**: 2 modes, 47 colors, 11 numbers, and 1 boolean. The current file uses a versioned schema with two styles and four palettes; Neobrutal Light remains the selected default.
+- Interface choices then were `v1`, `v2`, `soft`, `soft-brutal`, `brutal`, and `neubrutal`, each paired with light/dark. The current selector offers only `v2` and `neubrutal`; saved legacy IDs map to one of those styles. See [layout.tsx](../app/layout.tsx), [interface-version.ts](../app/lib/interface-version.ts), and [ui-customization.ts](../app/lib/ui-customization.ts).
 - Advanced Settings already exposes brand/focus, generic buttons, Learning Path buttons, generic fields, generic cards, light/dark dashboard cards, light/dark analytics cards, and dark base colors. See [AdvancedUiSettings.tsx](../app/components/AdvancedUiSettings.tsx).
-- Shared CSS variables reach generic `data-slot="button"`, `data-slot="card"`, fields/selects, and menu items in [globals.css](../app/globals.css). Page and interface-version rules then layer on top. The lesson preview has a separate palette in [course-lesson.css](../app/components/course-lesson.css).
+- Shared CSS variables reach generic `data-slot="button"`, `data-slot="card"`, fields/selects, and menu items in [globals.css](../app/globals.css). Page and interface-version rules then layer on top. The separate lesson-preview route now inherits the selected site palette through [course-lesson.css](../app/components/course-lesson.css); Learning Lab retains its reading palette.
 
-## Theme gaps that matter before reorganizing
+## Theme gaps recorded at the starting audit
 
 1. **Generic button controls only set the default variant's base colors and size.** Outline, ghost, secondary, destructive, and link buttons still get most of their look from their primitive and page/interface CSS. The configured focused background affects keyboard focus and selected top-navigation items; it is not a general hover color for all button variants.
 2. **Generic Card settings also reach chrome.** The sidebar and topbar are built with `Card`, so broad card rules can affect navigation surfaces. Named dashboard and analytics cards have later background overrides, so their individual colors take precedence over the generic card background.

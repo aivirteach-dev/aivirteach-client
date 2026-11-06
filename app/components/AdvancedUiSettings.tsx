@@ -339,7 +339,7 @@ export function AdvancedUiSettings({ t }: { t: Translate }) {
           )}
           <div className="advanced-save-actions">
             <Button type="button" variant="outline" onClick={() => router.push("/dashboard")}>{t("Preview site", "预览网站")}</Button>
-            <Button render={<a href="/theme-gallery.html" target="_blank" rel="noopener noreferrer" />} variant="outline">{t("Open UI gallery", "打开界面组件画廊")}</Button>
+            <Button render={<a href="/theme-gallery" />} variant="outline">{t("Open UI gallery", "打开界面组件画廊")}</Button>
             <Button type="button" onClick={() => void save()} disabled={saving} aria-busy={saving}>{saving ? t("Saving…", "保存中…") : t("Save site-wide to repo", "保存全站设置到仓库")}</Button>
             <Button type="button" variant="outline" onClick={reset}>{t("Reset all four drafts", "重置全部四套草稿")}</Button>
             <Button type="button" variant="ghost" onClick={discard}>{t("Discard preview", "放弃预览")}</Button>

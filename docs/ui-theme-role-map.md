@@ -8,6 +8,10 @@ Shared style border widths are now `buttonBorderWidth`, `fieldBorderWidth`, and 
 
 Shadow audit for the next style pass: general cards on Dashboard, Analytics, Settings, Profile, Courses, and the demo course mostly use `var(--shadow)`, while Neobrutalism also has explicit 4px offset shadows on shared Cards and buttons. Overlay popovers, selected catalog cards, the Analytics V2 hero, editor fieldsets, and icon utilities have distinct shadow treatments tied to their roles or states. Keep those roles separate when introducing an editable shared shadow value; a blanket Card shadow override would erase active and hero treatments. Learning Lab floating controls and its reading view remain outside this migration.
 
+Selector audit: production style selectors in `globals.css` reference only `v2` and `neubrutal`. The old names appear only in the preference migration function. The remaining `:nth-child` and `:nth-of-type` selectors size skeleton bars, progress glyph bars, typing dots, and decorative code-window indicators; none assign card colors. The remaining `!important` and page-specific overrides still need a cascade review before the stylesheet-order checklist item can be closed.
+
+The live `/theme-gallery` route keeps the original gallery's toolbar, section navigation, and grid. Its examples render the same Card and control primitives and production role/class pairs as the audited pages. Gallery layout lives in its own stylesheet; component appearance comes from the website CSS and active theme tokens. Its compact editor uses the same draft state and save endpoint as Advanced Settings. Examples use representative content; full page composition and responsive context must still be checked on each route. The old `/theme-gallery.html` URL redirects through an app route; no standalone CSS snapshot remains.
+
 ## Cards and surfaces
 
 | Role or surface | Current selector / location | Theme source |
