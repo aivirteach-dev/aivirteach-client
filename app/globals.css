@@ -347,9 +347,6 @@ html[data-theme="dark"] .search-button:hover, html[data-theme="dark"] .search-bu
 .notification-popover p.unread::before { content: ""; position: absolute; top: 19px; left: 8px; width: 6px; height: 6px; border-radius: 50%; background: var(--primary); }
 .new-label { display: inline-flex; margin-right: 8px; border-radius: 10px; padding: 2px 7px; background: var(--primary); color: #fff; font-size: 10px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; }
 .notification-popover p:last-child { border-bottom: 0; }
-.welcome-copy { margin: 26px auto 34px; text-align: left; }
-.welcome-copy h1 { margin: 0 0 6px; font-size: clamp(28px, 3vw, 38px); letter-spacing: -.035em; }
-.welcome-copy > p:last-child { margin: 0; color: var(--ink-soft); font-size: 17px; }
 .dashboard-grid { display: grid; grid-template-columns: minmax(0, 2fr) minmax(250px, .95fr); gap: 24px; max-width: none; }
 .course-card, .stat-card, .next-up { border: 1px solid #e2e8ea; background: #fff; box-shadow: var(--shadow); }
 .course-card { min-height: 305px; align-items: flex-start; gap: 0; padding: 28px; border-radius: 16px; text-align: left; }
@@ -697,7 +694,6 @@ html[data-theme="dark"] .message.student p { border-color: #9bc0ff; }
   .profile-block .profile-summary { display: flex; }
   .profile-block .profile-summary span, .profile-block .profile-summary em { display: none; }
   .page-content { padding: 22px 16px 44px; }
-  .welcome-copy { margin-top: 20px; }
   .dashboard-grid, .metric-grid, .achievement-row { grid-template-columns: 1fr; }
   .stat-stack { grid-template-columns: 1fr; }
   .stat-card { flex-direction: row; align-items: center; }

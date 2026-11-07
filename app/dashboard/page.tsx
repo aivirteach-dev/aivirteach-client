@@ -27,7 +27,6 @@ export default function DashboardPage() {
     return () => window.clearTimeout(timer);
   }, [searchFeedback]);
 
-  const firstName = profile.name.split(" ")[0];
   const isAllClear = profile.accountType === "all-clear";
   const currentCatalogCourse = courseCatalog.find((course) => course.title === profile.course.title) ?? (profile.accountType === "beginner" ? courseCatalog[2] : courseCatalog[0]);
   const practiceHours = Math.round(profile.stats.practiceMinutes / 60);
@@ -63,10 +62,7 @@ export default function DashboardPage() {
           </form>
           <NotificationMenu placement="dashboard" />
         </header>
-        <section className="welcome-copy">
-          <h1>{isAllClear ? t(`Hi, ${firstName}! You're all clear.`, `你好，${firstName}！你已全部完成。`) : t(`Hi, ${firstName}! You're making great progress.`, `你好，${firstName}！你的学习进展很棒。`)}</h1>
-          <p>{isAllClear ? t("You have completed every available lesson. Keep your skills fresh or explore what is next.", "你已完成所有可用课程。继续巩固技能，或探索接下来的内容。") : t("Pick up where you left off or explore new concepts.", "从上次离开的地方继续，或探索新概念。")}</p>
-        </section>
+        <h1 className="sr-only">{t("Dashboard", "控制台")}</h1>
         <section className="dashboard-grid" aria-label={t("Current learning overview", "当前学习概览")}>
           <Card as="article" className="course-card" uiRole="dashboard-course">
             <Badge className="course-chip" variant="secondary">◇ &nbsp; {profile.course.category}</Badge>
