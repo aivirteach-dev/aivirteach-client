@@ -1,0 +1,93 @@
+.gallery-page { min-height: 100vh; background: var(--background); color: var(--foreground); }
+.gallery-container { width: min(100% - 2rem, 1240px); margin-inline: auto; }
+.gallery-skip { position: absolute; top: -5rem; left: 1rem; z-index: 30; padding: .5rem 1rem; background: var(--ui-button-bg, var(--primary)); color: var(--ui-button-text, var(--primary-foreground)); }
+.gallery-skip:focus { top: 1rem; }
+.gallery-toolbar { position: sticky; top: 0; z-index: 20; border-bottom: 1px solid var(--ui-shell-border, var(--border)); background: var(--ui-shell-bg, var(--card)); color: var(--ui-shell-text, var(--foreground)); }
+.gallery-toolbar-inner { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; padding-block: .8rem; }
+.gallery-toolbar-start { display: flex; align-items: center; flex-wrap: wrap; gap: .9rem; min-width: 0; }
+.gallery-toolbar-start { flex-wrap: nowrap; }
+.gallery-home-link { min-height: 42px; flex: 0 0 auto; }
+/* On phones the label wraps the sticky toolbar onto an extra row, so the button shows only its arrow. */
+@media (max-width: 600px) {
+  .gallery-home-link { width: 42px; padding: 0; }
+  .gallery-home-label { display: none; }
+}
+.gallery-brand { display: grid; line-height: 1.15; }
+.gallery-brand small { color: var(--muted-foreground); font-size: .72rem; font-weight: 750; letter-spacing: .07em; text-transform: uppercase; }
+.gallery-toolbar-controls { display: flex; flex-wrap: wrap; gap: .7rem; }
+.gallery-toolbar-controls label { display: grid; gap: .15rem; min-width: 150px; font-size: .75rem; font-weight: 700; }
+.gallery-toolbar-controls select { min-height: 42px; }
+.gallery-intro { display: flex; align-items: end; justify-content: space-between; flex-wrap: wrap; gap: 1rem; padding-block: 2.4rem 1.4rem; }
+.gallery-intro h1 { margin: .2rem 0 .5rem; font-size: clamp(2rem, 4vw, 3.4rem); line-height: 1.1; letter-spacing: -.04em; }
+.gallery-intro p { max-width: 70ch; color: var(--muted-foreground); }
+.gallery-combination { padding: .55rem .9rem; }
+.gallery-section-nav { display: flex; flex-wrap: wrap; gap: .5rem; margin-bottom: 1.2rem; }
+.gallery-section-nav a { padding: .35rem .65rem; border: 1px solid var(--border); border-radius: var(--ui-field-radius, 8px); color: var(--foreground); text-decoration: none; font-size: .82rem; }
+.gallery-section-nav a:hover { background: var(--muted); }
+.gallery-section { margin-block: 1.6rem; scroll-margin-top: 7rem; }
+.gallery-section-head { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: .5rem; margin-bottom: .9rem; }
+.gallery-section-head h2 { margin: 0; font-size: 1.5rem; }
+.gallery-section-head p { color: var(--muted-foreground); font-size: .85rem; }
+.gallery-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; }
+.gallery-grid-two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.gallery-panel { min-width: 0; padding-inline: 1.2rem; }
+.gallery-panel h3 { margin: .1rem 0 .4rem; font-size: 1rem; }
+.gallery-panel p { font-size: .85rem; }
+.gallery-role-label { display: block; color: var(--muted-foreground); font-size: .72rem; font-weight: 750; letter-spacing: .07em; text-transform: uppercase; }
+.gallery-row { display: flex; align-items: center; flex-wrap: wrap; gap: .6rem; min-width: 0; }
+.gallery-row > input { flex: 1; min-width: 160px; }
+.gallery-space { margin-top: 1rem; }
+.gallery-swatches { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: .5rem; }
+.gallery-swatch { min-width: 0; }
+.gallery-swatch > span { display: block; height: 52px; border: 1px solid var(--border); border-radius: var(--ui-field-radius, 8px); }
+.gallery-swatch small { font-size: .72rem; }
+.gallery-form-stack { display: grid; gap: .8rem; }
+.gallery-form-stack > label { display: grid; gap: .3rem; font-size: .85rem; font-weight: 700; }
+.gallery-form-stack > .gallery-check { display: flex; align-items: center; }
+.gallery-editor-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .8rem; }
+.gallery-editor-grid > label { display: grid; gap: .3rem; min-width: 0; font-size: .82rem; font-weight: 700; }
+.gallery-editor-grid input[type="color"] { width: 100%; min-height: 42px; padding: 2px; }
+.gallery-editor-grid .gallery-checkbox { display: flex; align-items: center; gap: .5rem; }
+.gallery-editor-actions { display: flex; flex-wrap: wrap; gap: .6rem; }
+.gallery-media { min-height: 100px; display: grid; place-items: center; color: var(--primary-foreground); font-weight: 700; }
+.gallery-skeleton-short { width: 72%; }
+.gallery-footer { margin: 2rem 0 3rem; color: var(--muted-foreground); font-size: .8rem; }
+
+.theme-gallery-card-catalog { min-width: 0; }
+.theme-gallery-card-catalog > h3 { margin: 0 0 6px; }
+.theme-gallery-card-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; margin-top: 16px; }
+.theme-gallery-card-sample { min-width: 0; }
+.theme-gallery-card-caption { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 4px 12px; margin-bottom: 8px; color: var(--foreground); }
+.theme-gallery-card-caption small { color: var(--muted-foreground); }
+.theme-gallery-card-sample :is(.achievement-row, .analysis-v2-metrics, .analysis-v2-achievements) { display: block; }
+.theme-gallery-card-sample [data-slot="card"] { min-width: 0; width: 100%; }
+.theme-gallery-card-sample [data-slot="card"] > h4 { margin: 0; font-size: 17px; }
+.theme-gallery-card-sample [data-slot="card"] > p { margin: 0; font-size: 13px; }
+/* Page-scoped values the website sets on .analysis-v2-shell; without them the Analytics V2 gradients are invalid. */
+.theme-gallery-card-sample { --analysis-blue: #0568fe; --analysis-blue-dark: #094da9; --analysis-blue-soft: #eaf2ff; --analysis-violet: #6548d8; --analysis-cyan: #0797a6; --analysis-amber: #d58418; }
+/* Gallery columns are narrower than the pages these cards come from, so wide row layouts stack here. */
+.theme-gallery-card-sample .analysis-v2-course { grid-template-columns: minmax(0, 1fr); }
+.theme-gallery-card-sample .analysis-v2-course-progress { justify-self: start; }
+.theme-gallery-card-sample .settings-card { flex-direction: column; align-items: stretch; gap: 18px; }
+.theme-gallery-card-sample .settings-card > button { width: 100%; min-width: 0; }
+.theme-gallery-card-sample .analysis-v2-achievements { margin-top: 0; border-top: 0; padding-top: 0; }
+/* Fixed height so the bars' percentage heights resolve. */
+.theme-gallery-mini-chart { height: 100px; display: flex; align-items: end; justify-content: space-around; gap: 8px; margin-top: 16px; border-bottom: 1px solid var(--outline); }
+.theme-gallery-mini-chart span { width: 12%; height: 40%; background: var(--primary); }
+.theme-gallery-mini-chart span:nth-child(2) { height: 72%; }
+.theme-gallery-mini-chart span:nth-child(3) { height: 55%; }
+.theme-gallery-mini-chart span:nth-child(4) { height: 88%; }
+.theme-gallery-mini-chart span:nth-child(5) { height: 64%; }
+/* The preview banner is fixed top-right, where it would cover the toolbar's style and mode selectors. */
+body:has(.gallery-page) .theme-preview-banner { top: auto; bottom: 12px; }
+.gallery-shell-sample { position: static; width: 100%; }
+.gallery-shell-sample .topbar-inner { width: 100%; }
+
+@media (max-width: 850px) {
+  .gallery-grid, .gallery-grid-two, .theme-gallery-card-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .gallery-swatches { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (max-width: 600px) {
+  .gallery-grid, .gallery-grid-two, .theme-gallery-card-grid, .gallery-editor-grid { grid-template-columns: 1fr; }
+  .gallery-swatches { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}

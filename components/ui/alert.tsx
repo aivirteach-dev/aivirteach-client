@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils"
 const alertVariants = cva("group/alert relative grid w-full gap-0.5 rounded-lg border px-2.5 py-2 text-left text-sm", { variants: { variant: { default: "bg-card text-card-foreground", destructive: "bg-card text-destructive" } }, defaultVariants: { variant: "default" } })
 
 function Alert({ className, variant, ...props }: React.ComponentProps<"div"> & VariantProps<typeof alertVariants>) {
-  return <div data-slot="alert" role="alert" className={cn(alertVariants({ variant }), className)} {...props} />
+  return <div data-slot="alert" data-variant={variant ?? "default"} role="alert" className={cn(alertVariants({ variant }), className)} {...props} />
 }
 
 function AlertTitle({ className, ...props }: React.ComponentProps<"div">) {

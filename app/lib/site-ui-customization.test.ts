@@ -10,6 +10,6 @@ afterEach(() => localStorage.clear());
 it("loads the committed theme ahead of older browser-only settings", () => {
   localStorage.setItem("aivirteach-ui-customization", JSON.stringify({ learningPathButtonBackground: "#abcdef" }));
   expect(getSavedUiCustomization()?.learningPathButtonBackground).toBe("#345678");
-  expect(getCommittedInterfaceVersion()).toBe("soft");
+  expect(getCommittedInterfaceVersion()).toBe("v2");
   expect(getCommittedTheme()).toBe("dark");
 });

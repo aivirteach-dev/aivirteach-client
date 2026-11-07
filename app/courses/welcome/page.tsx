@@ -92,7 +92,7 @@ export default function CourseWelcomePage() {
       {!checked ? (
         <p className="course-welcome-loading" role="status">{t("Preparing your course...", "正在准备课程……")}</p>
       ) : course && welcome ? (
-        <Card as="section" className="course-welcome-window" aria-label={`${course.title} welcome`}>
+        <Card as="section" className="course-welcome-window" uiRole="course-welcome" aria-label={`${course.title} welcome`}>
           <Button
             className="course-welcome-close"
             variant="outline"
@@ -144,7 +144,7 @@ export default function CourseWelcomePage() {
           </footer>
         </Card>
       ) : (
-        <Card as="section" className="course-required-card">
+        <Card as="section" className="course-required-card" uiRole="course-required">
           <h1>{t("No active course", "没有进行中的课程")}</h1>
           <p>{error || t("Choose a course before entering the Learning Lab.", "进入学习实验室前，请先选择课程。")}</p>
           <Button className="primary-button" size="lg" type="button" onClick={() => router.replace("/courses")}>{t("Browse courses", "浏览课程")}</Button>

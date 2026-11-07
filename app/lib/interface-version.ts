@@ -1,4 +1,6 @@
-export type InterfaceVersion = "v1" | "v2" | "soft" | "soft-brutal" | "brutal" | "neubrutal";
+import { resolveThemeStyle, type ThemeStyle } from "./theme-style";
+
+export type InterfaceVersion = ThemeStyle;
 
 import { getCommittedInterfaceVersion } from "./site-ui-customization";
 
@@ -8,7 +10,7 @@ const versionChangeEvent = "aivirteach:interface-version-change";
 
 export function getStoredInterfaceVersion(): InterfaceVersion {
   const storedVersion = window.sessionStorage.getItem(previewStorageKey) ?? window.localStorage.getItem(versionStorageKey);
-  return storedVersion === "v1" || storedVersion === "v2" || storedVersion === "soft" || storedVersion === "soft-brutal" || storedVersion === "brutal" || storedVersion === "neubrutal" ? storedVersion : getCommittedInterfaceVersion();
+  return resolveThemeStyle(storedVersion, getCommittedInterfaceVersion());
 }
 
 export function getServerInterfaceVersion(): InterfaceVersion {

@@ -4,9 +4,11 @@ export type UiCustomization = {
   buttonBackground: string;
   buttonText: string;
   buttonFocusBackground: string;
+  buttonFocusText: string;
   buttonHeight: number;
   buttonFontSize: number;
   buttonRadius: number;
+  buttonBorderWidth: number;
   learningPathButtonBackground: string;
   learningPathButtonFocusBackground: string;
   learningPathButtonText: string;
@@ -22,10 +24,33 @@ export type UiCustomization = {
   fieldHeight: number;
   fieldFontSize: number;
   fieldRadius: number;
+  fieldBorderWidth: number;
   cardBackground: string;
   cardBorder: string;
+  overlayBackground: string;
+  overlayText: string;
+  overlayBorder: string;
+  shellBackground: string;
+  shellText: string;
+  shellBorder: string;
+  codeBackground: string;
+  codeText: string;
+  codeBorder: string;
+  statusSuccess: string;
+  statusWarning: string;
+  statusError: string;
+  progressTrack: string;
+  skeletonBackground: string;
   cardRadius: number;
   cardPadding: number;
+  cardBorderWidth: number;
+  lightBackground: string;
+  lightSurface: string;
+  lightSurfaceMuted: string;
+  lightText: string;
+  lightTextMuted: string;
+  lightBorder: string;
+  lightSecondary: string;
   darkBackground: string;
   darkSurface: string;
   darkSurfaceMuted: string;
@@ -60,15 +85,29 @@ export type UiCustomization = {
   darkProgressAchievement4: string;
 };
 
+export const cardRoleColorKeys = [
+  "dashboardCourseCard", "dashboardStreakCard", "dashboardPracticeCard", "dashboardSkillsCard",
+  "progressPracticeCard", "progressTasksCard", "progressGoalCard", "progressChartCard",
+  "progressAchievement1", "progressAchievement2", "progressAchievement3", "progressAchievement4",
+  "darkDashboardCourseCard", "darkDashboardStreakCard", "darkDashboardPracticeCard", "darkDashboardSkillsCard",
+  "darkProgressPracticeCard", "darkProgressTasksCard", "darkProgressGoalCard", "darkProgressChartCard",
+  "darkProgressAchievement1", "darkProgressAchievement2", "darkProgressAchievement3", "darkProgressAchievement4",
+] as const satisfies readonly (keyof UiCustomization)[];
+
+export type CardRoleColorKey = (typeof cardRoleColorKeys)[number];
+const cardRoleColorKeySet = new Set<keyof UiCustomization>(cardRoleColorKeys);
+
 export const defaultUiCustomization: UiCustomization = {
   accentColor: "#2563eb",
   menuItemHover: "#d1d5db",
   buttonBackground: "#000000",
   buttonText: "#ffffff",
   buttonFocusBackground: "#ffe66d",
+  buttonFocusText: "#000000",
   buttonHeight: 42,
   buttonFontSize: 14,
   buttonRadius: 0,
+  buttonBorderWidth: 3,
   learningPathButtonBackground: "#ffe66d",
   learningPathButtonFocusBackground: "#facc15",
   learningPathButtonText: "#000000",
@@ -84,10 +123,33 @@ export const defaultUiCustomization: UiCustomization = {
   fieldHeight: 54,
   fieldFontSize: 16,
   fieldRadius: 0,
+  fieldBorderWidth: 3,
   cardBackground: "#ffffff",
   cardBorder: "#000000",
+  overlayBackground: "#ffffff",
+  overlayText: "#000000",
+  overlayBorder: "#000000",
+  shellBackground: "#ffffff",
+  shellText: "#000000",
+  shellBorder: "#000000",
+  codeBackground: "#171b22",
+  codeText: "#d9e8ff",
+  codeBorder: "#101318",
+  statusSuccess: "#075d3a",
+  statusWarning: "#904d00",
+  statusError: "#a52d27",
+  progressTrack: "#ffe66d",
+  skeletonBackground: "#e8e8e8",
   cardRadius: 0,
   cardPadding: 24,
+  cardBorderWidth: 4,
+  lightBackground: "#fff8e7",
+  lightSurface: "#ffffff",
+  lightSurfaceMuted: "#ffe66d",
+  lightText: "#000000",
+  lightTextMuted: "#222222",
+  lightBorder: "#000000",
+  lightSecondary: "#4ecdc4",
   darkBackground: "#141218",
   darkSurface: "#242129",
   darkSurfaceMuted: "#34303b",
@@ -103,11 +165,11 @@ export const defaultUiCustomization: UiCustomization = {
   progressPracticeCard: "#4ecdc4",
   progressTasksCard: "#ffe66d",
   progressGoalCard: "#a8e6cf",
-  progressChartCard: "#ffffff",
-  progressAchievement1: "#ffffff",
-  progressAchievement2: "#ffffff",
-  progressAchievement3: "#ffffff",
-  progressAchievement4: "#ffffff",
+  progressChartCard: "inherit",
+  progressAchievement1: "inherit",
+  progressAchievement2: "inherit",
+  progressAchievement3: "inherit",
+  progressAchievement4: "inherit",
   darkDashboardCourseCard: "#ff7b7b",
   darkDashboardStreakCard: "#5ee1d7",
   darkDashboardPracticeCard: "#34303b",
@@ -115,35 +177,38 @@ export const defaultUiCustomization: UiCustomization = {
   darkProgressPracticeCard: "#5ee1d7",
   darkProgressTasksCard: "#34303b",
   darkProgressGoalCard: "#355b5d",
-  darkProgressChartCard: "#242129",
-  darkProgressAchievement1: "#242129",
-  darkProgressAchievement2: "#242129",
-  darkProgressAchievement3: "#242129",
-  darkProgressAchievement4: "#242129",
+  darkProgressChartCard: "inherit",
+  darkProgressAchievement1: "inherit",
+  darkProgressAchievement2: "inherit",
+  darkProgressAchievement3: "inherit",
+  darkProgressAchievement4: "inherit",
 };
 
 const storageKey = "aivirteach-ui-customization";
 const previewStorageKey = "aivirteach-ui-customization-preview";
 const changeEvent = "aivirteach:ui-customization-change";
 const colorPattern = /^#[0-9a-f]{6}$/i;
-const numberRanges: Record<keyof Pick<UiCustomization, "buttonHeight" | "buttonFontSize" | "buttonRadius" | "learningPathButtonHeight" | "learningPathButtonFontSize" | "learningPathButtonRadius" | "fieldHeight" | "fieldFontSize" | "fieldRadius" | "cardRadius" | "cardPadding">, [number, number]> = {
+const numberRanges: Record<keyof Pick<UiCustomization, "buttonHeight" | "buttonFontSize" | "buttonRadius" | "buttonBorderWidth" | "learningPathButtonHeight" | "learningPathButtonFontSize" | "learningPathButtonRadius" | "fieldHeight" | "fieldFontSize" | "fieldRadius" | "fieldBorderWidth" | "cardRadius" | "cardPadding" | "cardBorderWidth">, [number, number]> = {
   buttonHeight: [28, 72],
   buttonFontSize: [11, 22],
   buttonRadius: [0, 32],
+  buttonBorderWidth: [0, 6],
   learningPathButtonHeight: [32, 72],
   learningPathButtonFontSize: [11, 22],
   learningPathButtonRadius: [0, 32],
   fieldHeight: [36, 76],
   fieldFontSize: [12, 22],
   fieldRadius: [0, 32],
+  fieldBorderWidth: [0, 6],
   cardRadius: [0, 32],
   cardPadding: [8, 48],
+  cardBorderWidth: [0, 6],
 };
 
-export function sanitizeUiCustomization(candidate: Partial<UiCustomization>): UiCustomization {
-  const next = { ...defaultUiCustomization };
-  for (const key of ["accentColor", "menuItemHover", "buttonBackground", "buttonText", "buttonFocusBackground", "learningPathButtonBackground", "learningPathButtonFocusBackground", "learningPathButtonText", "learningPathButtonBorder", "fieldBackground", "fieldText", "fieldBorder", "focusBorder", "cardBackground", "cardBorder", "darkBackground", "darkSurface", "darkSurfaceMuted", "darkText", "darkTextMuted", "darkBorder", "darkPrimary", "darkSecondary", "dashboardCourseCard", "dashboardStreakCard", "dashboardPracticeCard", "dashboardSkillsCard", "progressPracticeCard", "progressTasksCard", "progressGoalCard", "progressChartCard", "progressAchievement1", "progressAchievement2", "progressAchievement3", "progressAchievement4", "darkDashboardCourseCard", "darkDashboardStreakCard", "darkDashboardPracticeCard", "darkDashboardSkillsCard", "darkProgressPracticeCard", "darkProgressTasksCard", "darkProgressGoalCard", "darkProgressChartCard", "darkProgressAchievement1", "darkProgressAchievement2", "darkProgressAchievement3", "darkProgressAchievement4"] as const) {
-    if (typeof candidate[key] === "string" && colorPattern.test(candidate[key])) next[key] = candidate[key];
+export function sanitizeUiCustomization(candidate: Partial<UiCustomization>, defaults: UiCustomization = defaultUiCustomization): UiCustomization {
+  const next = { ...defaults };
+  for (const key of ["accentColor", "menuItemHover", "buttonBackground", "buttonText", "buttonFocusBackground", "buttonFocusText", "learningPathButtonBackground", "learningPathButtonFocusBackground", "learningPathButtonText", "learningPathButtonBorder", "fieldBackground", "fieldText", "fieldBorder", "focusBorder", "cardBackground", "cardBorder", "overlayBackground", "overlayText", "overlayBorder", "shellBackground", "shellText", "shellBorder", "codeBackground", "codeText", "codeBorder", "statusSuccess", "statusWarning", "statusError", "progressTrack", "skeletonBackground", "lightBackground", "lightSurface", "lightSurfaceMuted", "lightText", "lightTextMuted", "lightBorder", "lightSecondary", "darkBackground", "darkSurface", "darkSurfaceMuted", "darkText", "darkTextMuted", "darkBorder", "darkPrimary", "darkSecondary", "dashboardCourseCard", "dashboardStreakCard", "dashboardPracticeCard", "dashboardSkillsCard", "progressPracticeCard", "progressTasksCard", "progressGoalCard", "progressChartCard", "progressAchievement1", "progressAchievement2", "progressAchievement3", "progressAchievement4", "darkDashboardCourseCard", "darkDashboardStreakCard", "darkDashboardPracticeCard", "darkDashboardSkillsCard", "darkProgressPracticeCard", "darkProgressTasksCard", "darkProgressGoalCard", "darkProgressChartCard", "darkProgressAchievement1", "darkProgressAchievement2", "darkProgressAchievement3", "darkProgressAchievement4"] as const) {
+    if (typeof candidate[key] === "string" && (colorPattern.test(candidate[key]) || (cardRoleColorKeySet.has(key) && candidate[key] === "inherit"))) next[key] = candidate[key];
   }
   for (const key of Object.keys(numberRanges) as (keyof typeof numberRanges)[]) {
     const value = Number(candidate[key]);
@@ -171,9 +236,11 @@ const cssVariables: Record<Exclude<keyof UiCustomization, "learningPathButtonSha
   buttonBackground: "--ui-button-bg",
   buttonText: "--ui-button-text",
   buttonFocusBackground: "--ui-button-focus-bg",
+  buttonFocusText: "--ui-button-focus-text",
   buttonHeight: "--ui-button-height",
   buttonFontSize: "--ui-button-font-size",
   buttonRadius: "--ui-button-radius",
+  buttonBorderWidth: "--ui-button-border-width",
   learningPathButtonBackground: "--ui-learning-path-button-bg",
   learningPathButtonFocusBackground: "--ui-learning-path-button-focus-bg",
   learningPathButtonText: "--ui-learning-path-button-text",
@@ -188,10 +255,33 @@ const cssVariables: Record<Exclude<keyof UiCustomization, "learningPathButtonSha
   fieldHeight: "--ui-field-height",
   fieldFontSize: "--ui-field-font-size",
   fieldRadius: "--ui-field-radius",
+  fieldBorderWidth: "--ui-field-border-width",
   cardBackground: "--ui-card-bg",
   cardBorder: "--ui-card-border",
+  overlayBackground: "--ui-overlay-bg",
+  overlayText: "--ui-overlay-text",
+  overlayBorder: "--ui-overlay-border",
+  shellBackground: "--ui-shell-bg",
+  shellText: "--ui-shell-text",
+  shellBorder: "--ui-shell-border",
+  codeBackground: "--ui-code-bg",
+  codeText: "--ui-code-text",
+  codeBorder: "--ui-code-border",
+  statusSuccess: "--ui-status-success",
+  statusWarning: "--ui-status-warning",
+  statusError: "--ui-status-error",
+  progressTrack: "--ui-progress-track",
+  skeletonBackground: "--ui-skeleton-bg",
   cardRadius: "--ui-card-radius",
   cardPadding: "--ui-card-padding",
+  cardBorderWidth: "--ui-card-border-width",
+  lightBackground: "--ui-light-background",
+  lightSurface: "--ui-light-surface",
+  lightSurfaceMuted: "--ui-light-surface-muted",
+  lightText: "--ui-light-text",
+  lightTextMuted: "--ui-light-text-muted",
+  lightBorder: "--ui-light-border",
+  lightSecondary: "--ui-light-secondary",
   darkBackground: "--ui-dark-background",
   darkSurface: "--ui-dark-surface",
   darkSurfaceMuted: "--ui-dark-surface-muted",
@@ -226,14 +316,14 @@ const cssVariables: Record<Exclude<keyof UiCustomization, "learningPathButtonSha
   darkProgressAchievement4: "--ui-dark-progress-achievement-4",
 };
 
-const pixelValues = new Set<keyof UiCustomization>(["buttonHeight", "buttonFontSize", "buttonRadius", "learningPathButtonHeight", "learningPathButtonFontSize", "learningPathButtonRadius", "fieldHeight", "fieldFontSize", "fieldRadius", "cardRadius", "cardPadding"]);
+const pixelValues = new Set<keyof UiCustomization>(["buttonHeight", "buttonFontSize", "buttonRadius", "buttonBorderWidth", "learningPathButtonHeight", "learningPathButtonFontSize", "learningPathButtonRadius", "fieldHeight", "fieldFontSize", "fieldRadius", "fieldBorderWidth", "cardRadius", "cardPadding", "cardBorderWidth"]);
 
 export function previewUiCustomization(settings: UiCustomization) {
   const root = document.documentElement;
   root.dataset.uiCustomized = "true";
   const safe = sanitizeUiCustomization(settings);
   for (const key of Object.keys(cssVariables) as (keyof typeof cssVariables)[]) {
-    root.style.setProperty(cssVariables[key], `${safe[key]}${pixelValues.has(key) ? "px" : ""}`);
+    root.style.setProperty(cssVariables[key], cardRoleColorKeySet.has(key) && safe[key] === "inherit" ? "var(--ui-card-bg)" : `${safe[key]}${pixelValues.has(key) ? "px" : ""}`);
   }
   root.style.setProperty("--ui-learning-path-button-shadow", safe.learningPathButtonShadow ? "3px 3px 0 var(--ui-learning-path-button-border)" : "none");
   root.style.removeProperty("--primary");

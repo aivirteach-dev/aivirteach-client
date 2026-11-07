@@ -57,7 +57,7 @@ export default function ProfileSettingsPage() {
           <p>{t("Manage the learner identity used throughout your demo experience.", "管理演示体验中使用的学习者身份。")}</p>
         </header>
 
-        <Card as="section" className="profile-settings-card">
+        <Card as="section" className="profile-settings-card" uiRole="profile-form">
           <div className="profile-settings-summary">
             <Avatar size="large" name={profile.name} src={profile.avatar} />
             <div><h2>{profile.name}</h2><p>{profile.plan} Learner · Level {profile.level}</p><small>{profile.email}</small></div>

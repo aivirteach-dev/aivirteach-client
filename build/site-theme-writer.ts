@@ -2,7 +2,7 @@ import { writeFile } from "node:fs/promises";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { resolve } from "node:path";
 import type { Plugin } from "vite";
-import { sanitizeUiCustomization } from "../app/lib/ui-customization";
+import { sanitizeThemePresets, validateThemeSelection } from "../app/lib/theme-presets";
 
 export async function handleSiteThemeSave(request: IncomingMessage, response: ServerResponse, root: string) {
   response.setHeader("Content-Type", "application/json; charset=utf-8");
@@ -39,16 +39,13 @@ export async function handleSiteThemeSave(request: IncomingMessage, response: Se
       response.writeHead(400).end(JSON.stringify({ error: "Invalid theme settings." }));
       return;
     }
-    const settings = sanitizeUiCustomization(candidate);
     const selected = candidate as Record<string, unknown>;
-    const interfaceVersion = selected.interfaceVersion;
-    const theme = selected.theme;
-    if (!(interfaceVersion === "v1" || interfaceVersion === "v2" || interfaceVersion === "soft" || interfaceVersion === "soft-brutal" || interfaceVersion === "brutal" || interfaceVersion === "neubrutal") ||
-        !(theme === "light" || theme === "dark")) {
+    if (selected.schemaVersion !== 2 || !selected.styles || !selected.palettes ||
+        typeof selected.styles !== "object" || typeof selected.palettes !== "object" || !validateThemeSelection(candidate)) {
       response.writeHead(400).end(JSON.stringify({ error: "Invalid visual style or theme mode." }));
       return;
     }
-    const saved = { interfaceVersion, theme, ...settings };
+    const saved = sanitizeThemePresets(candidate);
     await writeFile(resolve(root, "app", "lib", "site-ui-customization.json"), `${JSON.stringify(saved, null, 2)}\n`, "utf8");
     response.writeHead(200).end(JSON.stringify(saved));
   } catch {
