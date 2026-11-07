@@ -4,6 +4,14 @@
 .gallery-skip:focus { top: 1rem; }
 .gallery-toolbar { position: sticky; top: 0; z-index: 20; border-bottom: 1px solid var(--ui-shell-border, var(--border)); background: var(--ui-shell-bg, var(--card)); color: var(--ui-shell-text, var(--foreground)); }
 .gallery-toolbar-inner { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; padding-block: .8rem; }
+.gallery-toolbar-start { display: flex; align-items: center; flex-wrap: wrap; gap: .9rem; min-width: 0; }
+.gallery-toolbar-start { flex-wrap: nowrap; }
+.gallery-home-link { min-height: 42px; flex: 0 0 auto; }
+/* On phones the label wraps the sticky toolbar onto an extra row, so the button shows only its arrow. */
+@media (max-width: 600px) {
+  .gallery-home-link { width: 42px; padding: 0; }
+  .gallery-home-label { display: none; }
+}
 .gallery-brand { display: grid; line-height: 1.15; }
 .gallery-brand small { color: var(--muted-foreground); font-size: .72rem; font-weight: 750; letter-spacing: .07em; text-transform: uppercase; }
 .gallery-toolbar-controls { display: flex; flex-wrap: wrap; gap: .7rem; }

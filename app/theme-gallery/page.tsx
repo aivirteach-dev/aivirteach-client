@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { ArrowLeftIcon } from "lucide-react";
 import { useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -171,7 +172,10 @@ export default function ThemeGalleryPage() {
     <a className="gallery-skip" href="#gallery-content">{t("Skip to gallery", "跳转到画廊")}</a>
     <header className="gallery-toolbar">
       <div className="gallery-container gallery-toolbar-inner">
-        <div className="gallery-brand"><strong>AIVirTeach · UI gallery</strong><small>{t("Website components and live theme styles", "网站组件与实时主题样式")}</small></div>
+        <div className="gallery-toolbar-start">
+          <Button render={<Link href="/dashboard" />} variant="outline" className="gallery-home-link" aria-label={t("Back to home", "返回首页")}><ArrowLeftIcon aria-hidden="true" /><span className="gallery-home-label">{t("Back to home", "返回首页")}</span></Button>
+          <div className="gallery-brand"><strong>AIVirTeach · UI gallery</strong><small>{t("Website components and live theme styles", "网站组件与实时主题样式")}</small></div>
+        </div>
         <div className="gallery-toolbar-controls">
           <label>{t("Visual style", "视觉风格")}<Select value={style} onChange={(event) => selectStyle(event.target.value as InterfaceVersion)}><option value="v2">Modern V2</option><option value="neubrutal">Neobrutalism</option></Select></label>
           <label>{t("Color mode", "配色模式")}<Select value={mode} onChange={(event) => selectMode(event.target.value as Theme)}><option value="light">Light</option><option value="dark">Dark</option></Select></label>
