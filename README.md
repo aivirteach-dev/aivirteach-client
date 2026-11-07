@@ -11,6 +11,10 @@ npm run dev
 
 Open http://localhost:3001 (the port is fixed in `vite.config.ts`) and log in with an account from the deployed server. New users activate their account at `/create-account` with the one-time invitation token AIVirTeach gives them.
 
+## Screen sizes
+
+For now the site is built and checked for **desktop screens only**. Phone and tablet layouts are out of scope: don't spend time optimizing for them, and don't treat a narrow-screen layout problem as a bug unless it also shows on desktop. Existing responsive CSS can stay as it is.
+
 ## Backend
 
 The client talks to the **AIVirTeach control-plane server**, deployed at `https://aivirteach-server.vercel.app/api/v1`. Its source is in `../server-architecture-source/aivirteach-server-main`; API docs are at `https://aivirteach-server.vercel.app/docs`.
