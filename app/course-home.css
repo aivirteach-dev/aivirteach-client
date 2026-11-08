@@ -1,27 +1,14 @@
-/* Reorganize B (branch redesign/reorganize-b): course-outline layout, after Khan Academy's course pages.
-   A sticky outline of the active course sits beside My learning and Mastery; the main column leads with
-   "Up next" and a per-lesson status grid. Works with both visual styles. */
+/* Course home (My learning) and Mastery, after Coursera's course home: a resume banner, quick stats,
+   expandable module rows, and activity in one column; Mastery stacks summary, course, skills, chart,
+   and achievements. Works with both visual styles. See docs/research/education-site-design-survey.md. */
 
-/* Variant label, so the localhosts are easy to tell apart. Remove before merging. */
-body::after {
-  content: "Reorganize B · localhost:3004";
-  position: fixed;
-  left: 12px;
-  bottom: 12px;
-  z-index: 1000;
-  padding: 4px 10px;
-  border-radius: 999px;
-  background: #0f766e;
-  color: #fff;
-  font: 600 11px/1.4 system-ui, sans-serif;
-  letter-spacing: .02em;
-  opacity: .85;
-  pointer-events: none;
-}
-
-.learn-b > * { width: min(100%, 1240px); margin-inline: auto; }
-.learn-b-layout { display: grid; grid-template-columns: 300px minmax(0, 1fr); align-items: start; gap: 32px; padding-top: 8px; }
-.learn-b-main { min-width: 0; display: grid; gap: 20px; }
+/* ---------- Shared ---------- */
+.learn-b2 > * { width: min(100%, 1080px); margin-inline: auto; }
+.learn-b2-main { min-width: 0; display: grid; gap: 28px; padding-top: 8px; }
+.learn-b2-section { display: grid; gap: 12px; scroll-margin-top: 80px; }
+.learn-b2-section-title { margin: 0; color: var(--ink); font-size: 18px; }
+.learn-b2-pair { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
+.learn-b2-loading { margin: 0; color: var(--ink-soft); font-size: 14px; }
 .learn-b-head h1 { margin: 4px 0 0; font-size: 32px; line-height: 1.15; letter-spacing: -.03em; }
 .learn-b-head-row { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; }
 .learn-b-eyebrow { color: var(--ink-soft); font-size: 12px; font-weight: 750; letter-spacing: .08em; text-transform: uppercase; }
@@ -30,51 +17,62 @@ body::after {
 .learn-b-card-head > span { color: var(--ink-soft); font-size: 13px; }
 .learn-b-big { color: var(--ink) !important; font-size: 28px !important; font-weight: 750; letter-spacing: -.02em; }
 .learn-b-link { color: var(--primary-light); font-size: 14px; font-weight: 700; }
+.learn-b-link:hover { text-decoration: underline; }
 html[data-interface-version="neubrutal"] .learn-b-link { color: var(--ink); text-decoration: underline; }
-.learn-b-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
 
-/* ---------- Course outline ---------- */
-.course-outline {
-  position: sticky;
-  top: 76px;
-  max-height: calc(100vh - 92px);
-  display: grid;
-  grid-template-rows: auto minmax(0, 1fr) auto;
-  overflow: hidden;
-  border: 1px solid var(--outline);
-  border-radius: var(--ui-card-radius, 12px);
-  background: var(--surface-lowest);
-}
-html[data-interface-version="neubrutal"] .course-outline { border: var(--ui-card-border-width, 3px) solid var(--outline); border-radius: 0; box-shadow: 4px 4px 0 var(--outline); }
-.course-outline-head { display: grid; gap: 4px; padding: 18px 18px 16px; border-bottom: 1px solid var(--surface-container); background: var(--surface-low); }
-html[data-interface-version="neubrutal"] .course-outline-head { border-bottom: 3px solid var(--outline); background: var(--primary-pale); }
-.course-outline-head > span { color: var(--ink-soft); font-size: 11px; font-weight: 750; letter-spacing: .08em; text-transform: uppercase; }
-.course-outline-head > strong { color: var(--ink); font-size: 16px; line-height: 1.3; }
-.course-outline-progress { display: flex; align-items: center; gap: 10px; margin-top: 6px; }
-.course-outline-progress .progress-track { flex: 1; margin: 0; }
-.course-outline-progress small { color: var(--ink-soft); font-size: 12px; font-variant-numeric: tabular-nums; }
-.course-outline-modules { margin: 0; padding: 8px 0; overflow-y: auto; list-style: none; }
-.course-outline-modules > li + li { margin-top: 6px; }
-.course-outline-module { display: block; padding: 10px 18px 6px; color: var(--ink-soft); font-size: 12px; font-weight: 750; }
-.course-outline-modules ol { margin: 0; padding: 0; list-style: none; }
-.course-outline-modules ol li { display: flex; align-items: center; gap: 10px; padding: 7px 18px; color: var(--ink); font-size: 14px; }
-.course-outline-modules ol li[data-state="current"] { background: var(--role-instructive-subtle, var(--primary-pale)); font-weight: 700; box-shadow: inset 3px 0 0 var(--role-instructive, var(--primary-light)); }
-html[data-interface-version="neubrutal"] .course-outline-modules ol li[data-state="current"] { background: var(--secondary); box-shadow: inset 4px 0 0 var(--outline); }
-.course-outline-modules ol li[data-state="done"] .course-outline-title { color: var(--ink-soft); }
-.course-outline-mark { width: 14px; height: 14px; flex: 0 0 14px; border: 2px solid var(--outline); border-radius: 3px; }
-li[data-state="done"] > .course-outline-mark { border-color: var(--learn-mastered, #594094); background: var(--learn-mastered, #594094); }
-li[data-state="current"] > .course-outline-mark { border-color: var(--role-instructive, var(--primary-light)); }
-html[data-interface-version="neubrutal"] .course-outline-mark { border-color: var(--outline); border-radius: 0; }
-html[data-interface-version="neubrutal"] li[data-state="done"] > .course-outline-mark { border-color: var(--outline); background: var(--ink); }
-.course-outline-title { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.course-outline-loading { margin: 0; padding: 18px; color: var(--ink-soft); font-size: 14px; }
-.course-outline-all { padding: 12px 18px; border-top: 1px solid var(--surface-container); color: var(--ink-soft); font-size: 13px; font-weight: 700; }
-html[data-interface-version="neubrutal"] .course-outline-all { border-top: 3px solid var(--outline); color: var(--ink); }
+/* ---------- Course header and resume banner ---------- */
+.learn-b2-course-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; margin-bottom: -12px; }
+.learn-b2-course-head > div { min-width: 0; display: grid; gap: 2px; }
+.learn-b2-course-head strong { color: var(--ink); font-size: 20px; line-height: 1.25; letter-spacing: -.01em; }
+.learn-b2-banner.course-card { min-height: 0; gap: 6px; padding: 26px 28px; }
+.learn-b2-banner h1 { margin: 4px 0 0; font-size: 28px; line-height: 1.2; letter-spacing: -.02em; }
+.learn-b2-banner > p { margin: 0; color: var(--ink-soft); }
+.learn-b2-banner-row { width: 100%; display: flex; align-items: center; gap: 24px; margin-top: 14px; }
+.learn-b2-banner-progress { min-width: 0; flex: 1; display: grid; gap: 6px; }
+.learn-b2-banner-progress .progress-track { margin: 0; }
+.learn-b2-banner-progress small { color: var(--ink-soft); font-size: 13px; }
+.learn-b2-banner .resume-button { flex: 0 0 auto; }
+.learn-b2-stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.learn-b2-stats .stat-card { min-height: 0; padding: 14px 16px; }
 
-/* ---------- Up next ---------- */
-.learn-b-next.course-card { min-height: 0; gap: 6px; padding: 24px 28px; }
-.learn-b-next h2 { margin: 6px 0 0; font-size: 24px; line-height: 1.25; }
-.learn-b-next > p { margin: 0 0 14px; color: var(--ink-soft); }
+/* ---------- Module rows ---------- */
+.learn-b2-modules { display: grid; gap: 10px; }
+.learn-b2-module { overflow: hidden; border: 1px solid var(--outline); border-radius: var(--ui-card-radius, 12px); background: var(--surface-lowest); }
+html[data-interface-version="neubrutal"] .learn-b2-module { border: var(--ui-card-border-width, 3px) solid var(--outline); border-radius: 0; box-shadow: 4px 4px 0 var(--outline); }
+.learn-b2-module summary { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 16px 20px; cursor: pointer; list-style: none; }
+.learn-b2-module summary::-webkit-details-marker { display: none; }
+.learn-b2-module summary::before { content: "›"; color: var(--ink-soft); font-size: 20px; transition: transform 150ms ease; }
+.learn-b2-module[open] summary::before { transform: rotate(90deg); }
+.learn-b2-module-name { min-width: 0; flex: 1; display: grid; gap: 2px; }
+.learn-b2-module-name strong { color: var(--ink); font-size: 16px; }
+.learn-b2-module-meta { width: 180px; display: flex; align-items: center; gap: 10px; }
+.learn-b2-module-meta .progress-track { flex: 1; margin: 0; }
+.learn-b2-module-meta small { color: var(--ink-soft); font-size: 12px; font-variant-numeric: tabular-nums; }
+.learn-b2-module ol { margin: 0; padding: 0 0 8px; list-style: none; border-top: 1px solid var(--surface-container); }
+html[data-interface-version="neubrutal"] .learn-b2-module ol { border-top: 3px solid var(--outline); }
+.learn-b2-module li { display: grid; grid-template-columns: 28px minmax(0, 1fr) auto auto; align-items: center; gap: 12px; padding: 10px 20px 10px 22px; }
+.learn-b2-module li[data-state="current"] { background: var(--role-instructive-subtle, var(--primary-pale)); }
+html[data-interface-version="neubrutal"] .learn-b2-module li[data-state="current"] { background: var(--secondary); }
+.learn-b2-mark { width: 24px; height: 24px; display: grid; place-items: center; border: 2px solid var(--outline); border-radius: 50%; color: var(--ink-soft); font-size: 11px; font-weight: 800; }
+li[data-state="done"] > .learn-b2-mark { border-color: var(--learn-mastered, #594094); background: var(--learn-mastered, #594094); color: #fff; }
+li[data-state="current"] > .learn-b2-mark { border-color: var(--role-instructive, var(--primary-light)); color: var(--role-instructive, var(--primary-light)); }
+html[data-interface-version="neubrutal"] .learn-b2-mark { border-color: var(--outline); border-radius: 0; color: var(--ink); }
+html[data-interface-version="neubrutal"] li[data-state="done"] > .learn-b2-mark { background: var(--ink); color: var(--surface-lowest); }
+.learn-b2-lesson-title { color: var(--ink); font-size: 15px; }
+li[data-state="done"] .learn-b2-lesson-title { color: var(--ink-soft); }
+li[data-state="current"] .learn-b2-lesson-title { font-weight: 700; }
+.learn-b2-minutes { color: var(--ink-soft); font-size: 12px; }
+
+/* ---------- Activity ---------- */
+.learn-b-activity { gap: 8px; padding: 20px 24px; }
+.learn-b-activity ul { margin: 0; padding: 0; list-style: none; }
+.learn-b-activity li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 16px; padding: 12px 0; border-top: 1px solid var(--surface-container); }
+.learn-b-activity li:first-child { border-top: 0; }
+html[data-interface-version="neubrutal"] .learn-b-activity li { border-top: 2px solid var(--outline); }
+html[data-interface-version="neubrutal"] .learn-b-activity li:first-child { border-top: 0; }
+.learn-b-activity li strong { color: var(--ink); font-size: 15px; }
+.learn-b-activity li span { grid-column: 1; color: var(--ink-soft); font-size: 13px; }
+.learn-b-activity li time { grid-column: 2; grid-row: 1 / span 2; align-self: center; color: var(--ink-soft); font-size: 12px; }
 
 /* ---------- Lesson status squares (Khan Academy unit progress) ---------- */
 .learn-b-mastery { gap: 16px; padding: 22px 24px; }
@@ -94,19 +92,6 @@ html[data-interface-version="neubrutal"] .learn-b-square[data-state="current"] {
 html[data-interface-version="neubrutal"] .learn-b-legend li::before { border-radius: 0; border-color: var(--outline); }
 html[data-interface-version="neubrutal"] .learn-b-legend li[data-state="done"]::before { background: var(--ink); }
 html[data-interface-version="neubrutal"] .learn-b-legend li[data-state="current"]::before { background: var(--secondary); }
-.learn-b-note { margin: 0; color: var(--ink-soft); font-size: 12px; }
-
-/* ---------- Stats and activity ---------- */
-.learn-b-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
-.learn-b-stats .stat-card { min-height: 0; flex-direction: column; align-items: stretch; gap: 10px; padding: 18px 20px; }
-.learn-b-stats .stat-card .progress-track { margin: 0; }
-.learn-b-activity { gap: 8px; padding: 20px 24px; }
-.learn-b-activity ul { margin: 0; padding: 0; list-style: none; }
-.learn-b-activity li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 16px; padding: 12px 0; border-top: 1px solid var(--surface-container); }
-html[data-interface-version="neubrutal"] .learn-b-activity li { border-top: 2px solid var(--outline); }
-.learn-b-activity li strong { color: var(--ink); font-size: 15px; }
-.learn-b-activity li span { grid-column: 1; color: var(--ink-soft); font-size: 13px; }
-.learn-b-activity li time { grid-column: 2; grid-row: 1 / span 2; align-self: center; color: var(--ink-soft); font-size: 12px; }
 
 /* ---------- Mastery page ---------- */
 .learn-b-insight { margin: 0; border-left: 4px solid var(--role-instructive, var(--primary-light)); padding: 12px 16px; background: var(--role-instructive-subtle, var(--primary-pale)); color: var(--ink); font-size: 15px; line-height: 1.5; }

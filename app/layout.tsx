@@ -3,7 +3,7 @@ import "./globals.css";
 import "./components/course-lesson.css";
 import "@fontsource-variable/inter";
 import "./design-refinements.css";
-import "./reorganize-b.css";
+import "./course-home.css";
 import { Geist } from "next/font/google";
 import { cn } from "@/lib/utils";
 import { ScrollbarPreference } from "./components/ScrollbarPreference";

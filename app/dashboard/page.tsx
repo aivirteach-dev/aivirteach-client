@@ -1,16 +1,17 @@
 "use client";
 
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
 import { Alert } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Sidebar } from "../components/Sidebar";
-import { CourseOutlineNav, lessonStateLabel } from "../components/CourseOutlineNav";
 import { useCourseOutline } from "../hooks/useCourseOutline";
 import { useLearnerProfile } from "../hooks/useLearnerProfile";
 import { activateCourse } from "../lib/courses";
 import { localize, useLearningLanguage } from "../lib/language";
+
+const stateMark = { done: "✓", current: "▶", todo: "" } as const;
 
 export default function DashboardPage() {
   const { profile, loading, error, recordPractice } = useLearnerProfile();
@@ -18,73 +19,91 @@ export default function DashboardPage() {
   const language = useLearningLanguage();
   const t = (english: string, chinese: string) => localize(language, english, chinese);
   const goal = Math.min(100, Math.max(0, profile.stats.weeklyGoalPercent));
-  const practiceHours = Math.round(profile.stats.practiceMinutes / 60);
   const current = outline?.current ?? null;
   const allDone = outline ? outline.total > 0 && outline.completed === outline.total : false;
   const lessonHref = outline?.course.localOnly ? "/courses/python-basics" : "/workspace";
   const percent = outline && outline.total ? Math.round((outline.completed / outline.total) * 100) : profile.course.progress;
+  const resume = () => { if (outline && !allDone) { activateCourse(outline.course.id); void recordPractice(15); } };
 
   return (
     <div className="app-shell dashboard-shell">
       <Sidebar active="dashboard" />
-      <main className={`dashboard learn-b page-content ${loading ? "data-loading" : ""}`}>
+      <main className={`dashboard learn-b2 page-content ${loading ? "data-loading" : ""}`}>
         {error && <Alert className="auth-error" variant="destructive">Backend unavailable: {error}</Alert>}
-        <div className="learn-b-layout">
-          <CourseOutlineNav outline={outline} percent={percent} />
+        <div className="learn-b2-main">
+          <header className="learn-b2-course-head">
+            <div><span className="learn-b-eyebrow">{outline?.course.category ?? profile.course.category}</span><strong>{outline?.course.title ?? profile.course.title}</strong></div>
+            <Link className="learn-b-link" href="/courses">{t("Change course", "更换课程")} →</Link>
+          </header>
 
-          <div className="learn-b-main">
-            <header className="learn-b-head">
-              <span className="learn-b-eyebrow">{outline?.course.category ?? profile.course.category}</span>
-              <h1>{outline?.course.title ?? profile.course.title ?? t("My learning", "我的学习")}</h1>
-            </header>
-
-            <Card as="section" className="course-card learn-b-next" uiRole="dashboard-course" aria-labelledby="learn-b-next-title">
-              <span className="learn-b-eyebrow">{allDone ? t("Course complete", "课程已完成") : t("Up next", "下一步")}</span>
-              <h2 id="learn-b-next-title">{allDone ? t("You finished every lesson", "你已完成所有课时") : current?.title ?? t("Loading your next lesson…", "正在加载下一课时……")}</h2>
-              {current && <p>{current.moduleTitle}{current.minutes ? t(` · ${current.minutes} min`, ` · ${current.minutes} 分钟`) : ""}</p>}
-              <Button render={<Link href={allDone ? "/courses" : lessonHref} />} className="primary-button resume-button" size="lg" onClick={() => { if (!allDone && outline) { activateCourse(outline.course.id); void recordPractice(15); } }}>
-                {allDone ? t("Explore Courses", "探索课程") : outline && outline.completed > 0 ? t("Continue lesson", "继续课时") : t("Start lesson", "开始课时")} <span aria-hidden="true">→</span>
-              </Button>
-            </Card>
-
-            <Card as="section" className="learn-b-mastery" aria-labelledby="learn-b-mastery-title">
-              <header className="learn-b-card-head">
-                <h2 id="learn-b-mastery-title">{t("Course progress", "课程进度")}</h2>
-                <span>{outline ? t(`${outline.completed} of ${outline.total} lessons`, `${outline.completed}/${outline.total} 节课`) : "…"}</span>
-              </header>
-              <div className="learn-b-squares" role="list" aria-label={t("Lessons by status", "按状态显示的课时")}>
-                {outline?.modules.flatMap((module) => module.lessons).map((lesson, index) => (
-                  <span role="listitem" key={lesson.id} className="learn-b-square" data-state={lesson.state} title={`${index + 1}. ${lesson.title}`} aria-label={`${index + 1}. ${lesson.title}: ${lessonStateLabel(lesson.state, t)}`} />
-                ))}
+          <section id="overview" className="learn-b2-section" aria-labelledby="learn-b2-title">
+            <Card as="div" className="course-card learn-b2-banner" uiRole="dashboard-course">
+              <span className="learn-b-eyebrow">{allDone ? t("Course complete", "课程已完成") : t("Resume where you left off", "从上次停下的地方继续")}</span>
+              <h1 id="learn-b2-title">{allDone ? (outline?.course.title ?? "") : current?.title ?? (profile.course.title || "…")}</h1>
+              <p>{current ? `${current.moduleTitle}${current.minutes ? t(` · ${current.minutes} min`, ` · ${current.minutes} 分钟`) : ""}` : outline?.course.title}</p>
+              <div className="learn-b2-banner-row">
+                <div className="learn-b2-banner-progress">
+                  <Progress className="progress-track" value={percent} aria-label={t(`${percent}% of the course complete`, `课程已完成 ${percent}%`)} />
+                  <small>{outline ? t(`${outline.completed} of ${outline.total} lessons · ${percent}%`, `${outline.completed}/${outline.total} 节课 · ${percent}%`) : `${percent}%`}</small>
+                </div>
+                <Button render={<Link href={allDone ? "/courses" : lessonHref} />} className="primary-button resume-button" size="lg" onClick={resume}>
+                  {allDone ? t("Explore Courses", "探索课程") : outline && outline.completed > 0 ? t("Resume", "继续") : t("Start course", "开始课程")} <span aria-hidden="true">→</span>
+                </Button>
               </div>
-              <ul className="learn-b-legend" aria-hidden="true">
-                <li data-state="done">{t("Completed", "已完成")}</li>
-                <li data-state="current">{t("Up next", "下一步")}</li>
-                <li data-state="todo">{t("Not started", "未开始")}</li>
-              </ul>
-              {outline?.source === "estimate" && <p className="learn-b-note">{t("Lesson titles are not available yet; positions are estimated from your course progress.", "暂无课时标题；位置根据课程进度估算。")}</p>}
             </Card>
-
-            <section className="learn-b-stats" aria-label={t("This week", "本周")}>
+            <div className="learn-b2-stats">
               <Card as="article" className="stat-card" uiRole="dashboard-stat" data-ui-tone="streak"><div><strong>{t(`${profile.stats.streakDays} Days`, `${profile.stats.streakDays} 天`)}</strong><span>{t("Current Streak", "连续学习")}</span></div></Card>
-              <Card as="article" className="stat-card learn-b-goal" uiRole="dashboard-stat" data-ui-tone="practice">
-                <div><strong>{goal}%</strong><span>{t("Weekly goal", "每周目标")}</span></div>
-                <Progress className="progress-track" value={goal} aria-label={t(`Weekly goal ${goal}% complete`, `每周目标已完成 ${goal}%`)} />
-              </Card>
-              <Card as="article" className="stat-card" uiRole="dashboard-stat" data-ui-tone="skills"><div><strong>{practiceHours}h</strong><span>{t("Practice Time", "练习时间")}</span></div></Card>
-            </section>
+              <Card as="article" className="stat-card" uiRole="dashboard-stat" data-ui-tone="practice"><div><strong>{goal}%</strong><span>{t("Weekly goal", "每周目标")}</span></div></Card>
+              <Card as="article" className="stat-card" uiRole="dashboard-stat" data-ui-tone="skills"><div><strong>{Math.round(profile.stats.practiceMinutes / 60)}h</strong><span>{t("Practice Time", "练习时间")}</span></div></Card>
+              <Card as="article" className="stat-card" uiRole="dashboard-stat"><div><strong>{profile.stats.skillsMastered}</strong><span>{t("Skills Mastered", "已掌握技能")}</span></div></Card>
+            </div>
+          </section>
 
-            {profile.recentActivity.length > 0 && (
-              <Card as="section" className="learn-b-activity" aria-labelledby="learn-b-activity-title">
-                <header className="learn-b-card-head"><h2 id="learn-b-activity-title">{t("Recent activity", "最近动态")}</h2><Link className="learn-b-link" href="/analysis">{t("All progress", "全部进度")} →</Link></header>
+          <section id="modules" className="learn-b2-section" aria-labelledby="learn-b2-modules">
+            <h2 id="learn-b2-modules" className="learn-b2-section-title">{t("Modules", "单元")}</h2>
+            {outline ? (
+              <div className="learn-b2-modules">
+                {outline.modules.map((module, index) => {
+                  const done = module.lessons.filter((lesson) => lesson.state === "done").length;
+                  const hasCurrent = module.lessons.some((lesson) => lesson.state === "current");
+                  return (
+                    <details key={module.id} className="learn-b2-module" open={hasCurrent || outline.modules.length === 1}>
+                      <summary>
+                        <span className="learn-b2-module-name"><span className="learn-b-eyebrow">{t(`Module ${index + 1}`, `第 ${index + 1} 单元`)}</span><strong>{module.title}</strong></span>
+                        <span className="learn-b2-module-meta">
+                          <Progress className="progress-track" value={module.lessons.length ? (done / module.lessons.length) * 100 : 0} aria-label={t(`${done} of ${module.lessons.length} lessons complete`, `已完成 ${done}/${module.lessons.length} 节课`)} />
+                          <small>{done}/{module.lessons.length}</small>
+                        </span>
+                      </summary>
+                      <ol>
+                        {module.lessons.map((lesson) => (
+                          <li key={lesson.id} data-state={lesson.state}>
+                            <span className="learn-b2-mark" aria-hidden="true">{stateMark[lesson.state]}</span>
+                            <span className="learn-b2-lesson-title">{lesson.title}<span className="sr-only">{lesson.state === "done" ? t(" (completed)", "（已完成）") : lesson.state === "current" ? t(" (up next)", "（下一步）") : ""}</span></span>
+                            {lesson.minutes && <span className="learn-b2-minutes">{t(`${lesson.minutes} min`, `${lesson.minutes} 分钟`)}</span>}
+                            {lesson.state === "current" && <Link className="learn-b-link" href={lessonHref} onClick={resume}>{t("Resume", "继续")} →</Link>}
+                          </li>
+                        ))}
+                      </ol>
+                    </details>
+                  );
+                })}
+              </div>
+            ) : <p className="learn-b2-loading" role="status">{t("Loading modules…", "正在加载单元……")}</p>}
+          </section>
+
+          {profile.recentActivity.length > 0 && (
+            <section id="activity" className="learn-b2-section" aria-labelledby="learn-b2-activity">
+              <h2 id="learn-b2-activity" className="learn-b2-section-title">{t("Activity", "动态")}</h2>
+              <Card as="div" className="learn-b-activity">
                 <ul>
                   {profile.recentActivity.map((activity) => (
                     <li key={activity.id}><strong>{activity.title}</strong><span>{activity.detail}</span><time>{activity.occurredAt}</time></li>
                   ))}
                 </ul>
               </Card>
-            )}
-          </div>
+            </section>
+          )}
         </div>
       </main>
     </div>
