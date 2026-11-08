@@ -1,0 +1,154 @@
+/* Design refinements from docs/research/education-site-design-survey.md (the "Refine" variant).
+   Loaded after globals.css, so equal-specificity rules here win. */
+
+/* 1. Semantic roles (Khan Academy / Codecademy model): a small set of purpose-named colors that
+   components draw from, derived from the active palette so the theme editor still controls them. */
+:root {
+  --role-instructive: var(--ui-button-bg, var(--primary-light));
+  --role-instructive-strong: var(--ui-button-focus-bg, var(--role-instructive));
+  --role-instructive-subtle: color-mix(in srgb, var(--role-instructive) 12%, var(--surface-lowest));
+  --role-neutral-subtle: var(--surface-low);
+  --role-neutral: var(--outline);
+  --role-neutral-strong: var(--ink);
+  --role-success: var(--ui-status-success, #137547);
+  --role-success-subtle: color-mix(in srgb, var(--role-success) 12%, var(--surface-lowest));
+  --role-warning: var(--ui-status-warning, #9a6700);
+  --role-warning-subtle: color-mix(in srgb, var(--role-warning) 14%, var(--surface-lowest));
+  --role-critical: var(--ui-status-error, #b42318);
+  --role-critical-subtle: color-mix(in srgb, var(--role-critical) 12%, var(--surface-lowest));
+  --role-knockout: var(--surface-lowest);
+  --role-focus: var(--ui-focus-border, #93c5fd);
+}
+
+/* Neobrutalism's main action color is its coral primary, not the black button fill. */
+html[data-interface-version="neubrutal"] {
+  --role-instructive: var(--primary);
+  --role-instructive-strong: var(--ink);
+}
+
+/* 2. Learning-progress colors, kept apart from status colors (Khan Academy's mastery levels).
+   "Success" means a save worked; "mastered" means the learner learned something. */
+:root {
+  --learn-not-started: var(--surface-container);
+  --learn-attempted: #c66024;
+  --learn-familiar: #d77d0f;
+  --learn-proficient: #7c6fd0;
+  --learn-mastered: #594094;
+  --learn-progress: var(--role-instructive);
+  --learn-correct: #17804a;
+  --learn-incorrect: #c2410c;
+}
+
+html[data-theme="dark"] {
+  --learn-attempted: #f0915a;
+  --learn-familiar: #f5b04d;
+  --learn-proficient: #b3a9f2;
+  --learn-mastered: #c9b6ff;
+  --learn-correct: #6fdca2;
+  --learn-incorrect: #ff9c70;
+}
+
+html[data-ui-customized="true"] .mock-lesson-complete,
+html[data-ui-customized="true"] [data-ui-role="course-lesson-option"][data-ui-complete="true"]:not([aria-current="step"]) > span {
+  border-color: var(--learn-mastered);
+  background: color-mix(in srgb, var(--learn-mastered) 12%, var(--surface-lowest));
+  color: var(--learn-mastered);
+}
+html[data-ui-customized="true"] [data-ui-role="course-feedback"].correct { border-left-color: var(--learn-correct); }
+html[data-ui-customized="true"] [data-ui-role="course-feedback"].incorrect { border-left-color: var(--learn-incorrect); }
+html[data-ui-customized="true"] [data-slot="progress-track"]:not(.analysis-v2-course-track) [data-slot="progress-indicator"],
+.progress-track > span { background: var(--learn-progress); }
+
+/* 3. One font family. Body text asked for Inter but nothing loaded it (Windows fell back to Segoe UI),
+   the next/font Geist variable loads no font file under Vinext, and analytics used Georgia.
+   Self-host Inter (@fontsource-variable/inter) and use it everywhere; keep monospace for code. */
+html:root { --font-sans: "Inter Variable", Inter, ui-sans-serif, system-ui, "Segoe UI", sans-serif; }
+html, body, html[data-interface-version] { font-family: var(--font-sans); }
+body { font-feature-settings: "cv11", "ss01"; }
+:is(
+  .analysis-head h1, .range-toggle button, .delta, .metric-label, .metric-card > strong,
+  .chart-card h2, .insight-card h2, .mastery-card h2, .achievements h2,
+  .insight-card p, .insight-card button, .skill-row > div:first-child, .mock-course-local-note > span
+) { font-family: inherit; }
+.metric-card > strong { font-weight: 750; letter-spacing: -.03em; font-variant-numeric: tabular-nums; }
+.insight-card p { font-weight: 500; }
+
+/* Tiered page titles: one size for every top-level page instead of five clamp() ranges. */
+:is(.analysis-head, .settings-head, .profile-settings-head, .courses-head) h1,
+.analysis-v2-head h1,
+.mock-course-head h1 {
+  font-size: 36px;
+  line-height: 1.1;
+  letter-spacing: -.03em;
+  font-weight: 750;
+}
+
+/* Lesson prose stays readable (survey: 460–700px columns). */
+.lesson-markdown { max-width: 70ch; }
+
+/* 4. Shorter top bar: 76px → 60px (surveyed sites use 38–65px). */
+.topbar { min-height: 60px; }
+.topbar-inner { min-height: 58px; padding-block: 8px; }
+.topbar-brand-logo { width: 140px; }
+.top-nav a, .top-nav > button { min-height: 36px; }
+.app-shell:has(> .topbar) .course-required-page { min-height: calc(100vh - 60px); }
+html[data-interface-version="neubrutal"] .topbar { border-bottom-width: 3px; }
+
+/* 5. Interaction states. One focus ring for everything keyboard-reachable. */
+:where(a, button, [role="button"], [role="tab"], summary, select):focus-visible {
+  outline: 3px solid var(--role-focus);
+  outline-offset: 2px;
+}
+
+/* Modern V2: interactive cards rise slightly and pick up the instructive color. */
+html[data-interface-version="v2"] .catalog-card {
+  transition: border-color 150ms ease, box-shadow 150ms ease, transform 150ms ease;
+}
+html[data-interface-version="v2"] .catalog-card:hover {
+  border-color: var(--role-instructive);
+  box-shadow: 0 8px 24px rgb(16 24 39 / .08);
+  transform: translateY(-2px);
+}
+html[data-interface-version="v2"][data-theme="dark"] .catalog-card:hover { box-shadow: 0 8px 24px rgb(0 0 0 / .35); }
+
+/* Neobrutalism (Codecademy model): hover lifts the element and lengthens its hard shadow;
+   pressing pushes it down into the shadow. Previously hover already looked pressed. */
+html[data-interface-version="neubrutal"] [data-slot="button"]:not([data-variant="ghost"], [data-variant="link"]):hover:not(:disabled) {
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px 0 var(--outline);
+}
+html[data-interface-version="neubrutal"] [data-slot="button"]:not([data-variant="ghost"], [data-variant="link"]):active:not(:disabled) {
+  transform: translate(4px, 4px);
+  box-shadow: 0 0 0 var(--outline);
+}
+html[data-interface-version="neubrutal"] :is(.top-nav, .topbar-actions) [data-slot="button"]:is(:hover, :active),
+html[data-interface-version="neubrutal"] .account-menu-topbar [data-slot="button"]:is(:hover, :active) {
+  transform: none;
+  box-shadow: none;
+}
+html[data-interface-version="neubrutal"] [data-slot="button"]:disabled { opacity: .5; transform: none; box-shadow: none; }
+html[data-interface-version="neubrutal"] .catalog-card {
+  transition: transform 120ms ease, box-shadow 120ms ease;
+}
+html[data-interface-version="neubrutal"] .catalog-card:hover {
+  transform: translate(-3px, -3px);
+  box-shadow: 9px 9px 0 var(--outline);
+}
+
+/* Neobrutal cards: 4px borders were the heaviest of any surveyed site; use the editable card width. */
+html[data-interface-version="neubrutal"] :is(
+  [data-slot="card"]:not(.topbar),
+  .achievement-row article,
+  .analysis-v2-course,
+  .analysis-v2-metrics article,
+  .analysis-v2-panel,
+  .analysis-v2-insight,
+  .analysis-v2-achievements article,
+  .lesson-activity
+) { border-width: var(--ui-card-border-width, 3px); }
+
+@media (prefers-reduced-motion: reduce) {
+  html .catalog-card:hover,
+  html [data-slot="button"]:hover,
+  html [data-slot="button"]:active { transform: none !important; }
+}

@@ -38,7 +38,7 @@ it("shares border widths within a style and keeps the other style's widths", () 
   const settings = updateThemePreset(defaultThemePresets, "v2", "dark", "cardBorderWidth", 2);
   expect(getThemePreset(settings, "v2", "light").cardBorderWidth).toBe(2);
   expect(getThemePreset(settings, "v2", "dark").cardBorderWidth).toBe(2);
-  expect(getThemePreset(settings, "neubrutal", "dark").cardBorderWidth).toBe(4);
+  expect(getThemePreset(settings, "neubrutal", "dark").cardBorderWidth).toBe(3);
 });
 
 it("keeps foundation colors independent across styles and modes", () => {

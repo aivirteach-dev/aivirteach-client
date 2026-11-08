@@ -6,17 +6,17 @@
     "v2": {
       "buttonHeight": 42,
       "buttonFontSize": 14,
-      "buttonRadius": 10,
+      "buttonRadius": 8,
       "buttonBorderWidth": 1,
       "learningPathButtonHeight": 42,
       "learningPathButtonFontSize": 14,
       "learningPathButtonRadius": 4,
       "learningPathButtonShadow": true,
-      "fieldHeight": 54,
+      "fieldHeight": 46,
       "fieldFontSize": 16,
-      "fieldRadius": 9,
+      "fieldRadius": 8,
       "fieldBorderWidth": 1,
-      "cardRadius": 16,
+      "cardRadius": 12,
       "cardPadding": 24,
       "cardBorderWidth": 1
     },
@@ -29,13 +29,13 @@
       "learningPathButtonFontSize": 14,
       "learningPathButtonRadius": 0,
       "learningPathButtonShadow": false,
-      "fieldHeight": 54,
+      "fieldHeight": 46,
       "fieldFontSize": 16,
       "fieldRadius": 0,
       "fieldBorderWidth": 3,
       "cardRadius": 0,
       "cardPadding": 24,
-      "cardBorderWidth": 4
+      "cardBorderWidth": 3
     }
   },
   "palettes": {
