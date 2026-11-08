@@ -38,6 +38,7 @@ export function AccountMenu() {
         </DropdownMenuTrigger>
         <DropdownMenuContent className="account-dropdown-shadcn" side="bottom" align="end" sideOffset={8}>
           <DropdownMenuItem render={<Link href="/settings/profile" />}>{t("Profile Settings", "个人资料设置")}</DropdownMenuItem>
+          <DropdownMenuItem render={<Link href="/settings" />}>{t("Settings", "设置")}</DropdownMenuItem>
           <DropdownMenuItem variant="destructive" onClick={() => void api.logout().finally(() => router.replace("/login"))}>{t("Sign out", "退出登录")}</DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>

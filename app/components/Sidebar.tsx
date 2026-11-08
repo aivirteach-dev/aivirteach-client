@@ -12,12 +12,12 @@ import { localize, useLearningLanguage } from "../lib/language";
 type SidebarProps = { active: "dashboard" | "courses" | "workspace" | "analysis" | "settings" };
 
 const items = [
-  { id: "dashboard", label: ["Dashboard", "控制台"], href: "/dashboard" },
+  { id: "dashboard", label: ["My learning", "我的学习"], href: "/dashboard" },
   { id: "courses", label: ["Courses", "课程"], href: "/courses" },
   { id: "workspace", label: ["Learning Lab", "学习实验室"], href: "/workspace" },
-  { id: "analysis", label: ["Progress", "学习进度"], href: "/analysis" },
-  { id: "settings", label: ["Settings", "设置"], href: "/settings" },
+  { id: "analysis", label: ["Mastery", "掌握情况"], href: "/analysis" },
 ] as const;
+// Settings lives in the account menu: the top bar keeps only learning destinations.
 
 export function Sidebar({ active }: SidebarProps) {
   const language = useLearningLanguage();
