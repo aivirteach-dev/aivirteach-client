@@ -1547,7 +1547,9 @@ html[data-theme="dark"] .top-nav > button:hover {
   transform: none;
 }
 
-.topbar-search {
+/* The notification bell uses the search button's look in the top bar. */
+.topbar-search,
+.topbar-actions .notification-button {
   width: 42px;
   height: 42px;
   border: 2px solid transparent;
@@ -1556,7 +1558,9 @@ html[data-theme="dark"] .top-nav > button:hover {
 }
 
 .topbar-search:hover,
-.topbar-search[aria-expanded="true"] {
+.topbar-search[aria-expanded="true"],
+.topbar-actions .notification-button:hover,
+.topbar-actions .notification-button[aria-expanded="true"] {
   border-color: var(--ink);
   background: var(--surface-container);
 }
@@ -1592,7 +1596,9 @@ html[data-theme="dark"] .top-nav > button:hover {
 
 .topbar-search:focus,
 .topbar-search:focus-visible,
-.topbar-search[aria-expanded="true"]:focus-visible {
+.topbar-search[aria-expanded="true"]:focus-visible,
+.topbar-actions .notification-button:focus,
+.topbar-actions .notification-button:focus-visible {
   outline: none !important;
   box-shadow: none !important;
 }
