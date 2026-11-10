@@ -239,17 +239,6 @@ export function AdvancedUiSettings({ t }: { t: Translate }) {
             <RangeControl label={t("Corner radius", "圆角")} value={draft.buttonRadius} minimum={0} maximum={32} onChange={(value) => update("buttonRadius", value)} />
             <RangeControl label={t("Border width", "边框宽度")} value={draft.buttonBorderWidth} minimum={0} maximum={6} onChange={(value) => update("buttonBorderWidth", value)} />
           </fieldset>
-          <fieldset><legend>{t("Learning Path buttons", "学习路径按钮")}</legend>
-            <p className="advanced-control-description">{t("Styles Previous, Next, and Mark lesson complete in the Learning Lab.", "设置学习实验室中上一节、下一节和标记本节已学完按钮的样式。")}</p>
-            <ColorControl label={t("Unfocused background", "未聚焦背景色")} value={draft.learningPathButtonBackground} onChange={(value) => update("learningPathButtonBackground", value)} />
-            <ColorControl label={t("Focused / hovered background", "聚焦／悬停背景色")} value={draft.learningPathButtonFocusBackground} onChange={(value) => update("learningPathButtonFocusBackground", value)} />
-            <ColorControl label={t("Text", "文字颜色")} value={draft.learningPathButtonText} onChange={(value) => update("learningPathButtonText", value)} />
-            <ColorControl label={t("Border", "边框颜色")} value={draft.learningPathButtonBorder} onChange={(value) => update("learningPathButtonBorder", value)} />
-            <RangeControl label={t("Height", "高度")} value={draft.learningPathButtonHeight} minimum={32} maximum={72} onChange={(value) => update("learningPathButtonHeight", value)} />
-            <RangeControl label={t("Font size", "字号")} value={draft.learningPathButtonFontSize} minimum={11} maximum={22} onChange={(value) => update("learningPathButtonFontSize", value)} />
-            <RangeControl label={t("Corner radius", "圆角")} value={draft.learningPathButtonRadius} minimum={0} maximum={32} onChange={(value) => update("learningPathButtonRadius", value)} />
-            <label className="advanced-toggle-control"><Checkbox checked={draft.learningPathButtonShadow} onCheckedChange={(checked) => update("learningPathButtonShadow", checked)} /><span>{t("Button shadow/backdrop", "按钮阴影／背景层")}</span></label>
-          </fieldset>
           <fieldset><legend>{t("Text fields and selects", "文本框与下拉框")}</legend>
             <ColorControl label={t("Background", "背景色")} value={draft.fieldBackground} onChange={(value) => update("fieldBackground", value)} />
             <ColorControl label={t("Text", "文字颜色")} value={draft.fieldText} onChange={(value) => update("fieldText", value)} />
@@ -395,7 +384,6 @@ export function AdvancedUiSettings({ t }: { t: Translate }) {
               <Button variant="outline" data-ui-role="auth-provider" disabled>{t("Provider disabled", "服务商不可用")}</Button>
             </div>
           </Card>
-          <Card as="section" className="component-preview-card" uiRole="theme-preview"><h3>{t("Learning Path buttons", "学习路径按钮")}</h3><p className="advanced-control-description">{t("Hover over or tab to a button to preview its focused color.", "将鼠标悬停在按钮上，或按 Tab 键聚焦按钮，以预览聚焦颜色。")}</p><div className="component-preview-row"><Button className="learning-path-button" variant="outline" type="button">{t("Previous", "上一节")}</Button><Button className="learning-path-button" variant="outline" type="button">{t("Next", "下一节")}</Button><Button className="learning-path-button" variant="outline" type="button">{t("Mark lesson complete", "标记本节已学完")}</Button></div></Card>
           <Card as="section" className="component-preview-card" uiRole="theme-preview">
             <h3>{t("Form controls", "表单控件")}</h3>
             <div className="component-preview-form">

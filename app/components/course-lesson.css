@@ -17,6 +17,8 @@
   width: 100%;
   color-scheme: light;
 }
+/* The Neobrutal reading surface stays light in dark mode, so buttons on it need a light surface too. */
+html[data-interface-version="neubrutal"] .course-lesson-view { --surface-lowest: #ffffff; }
 .course-lesson-inner { padding: 28px; max-width: 1260px; margin: auto; }
 .course-lesson-heading { padding: 30px; border: 1px solid #b8b7ac; border-radius: 5px; background: #fffdf5; margin-bottom: 24px; }
 .course-lesson-heading > p { display: inline-block; padding: 4px 8px; margin: 0 0 16px; border: 1px solid #d6c46c; background: #fff2ae; border-radius: 3px; color: #574c22; font-size: 12px; overflow-wrap: anywhere; }
@@ -37,8 +39,6 @@
 .course-lesson-view .lesson-markdown pre { margin: 0; padding: 20px; border: 0; border-radius: 0; background: #282d2b; color: #eef1e6; max-height: 560px; overflow: auto; font-size: 12px; line-height: 1.8; white-space: pre; }
 .course-lesson-view .lesson-markdown pre code { padding: 0; background: transparent; color: inherit; }
 .course-lesson-view .lesson-code-block > p { color: #eef1e6; padding: 0 16px 12px; }
-.course-lesson-view .lesson-copy-button { min-height: 32px; padding: 4px 10px; background: #e3edcf; color: #253b32; border: 1px solid #bed0a9; border-radius: 3px; font-size: 11px; box-shadow: none; }
-.course-lesson-view .lesson-copy-button:hover { background: #fff0a3; }
 .course-lesson-view .lesson-step { border: 1px solid #c8d5c3; border-radius: 5px; background: #f1f5ec; padding: 18px; }
 .course-lesson-view .lesson-step-number { color: #fffdf7; background: #356e58; border: 0; }
 .course-lesson-view .lesson-callout { padding: 18px; border: 1px solid var(--outline); border-radius: 5px; color: var(--ink); }
@@ -73,13 +73,14 @@
   .course-lesson-view .lesson-copy-button { min-height: 44px; }
 }
 
-/* The standalone lesson preview follows the site theme; Learning Lab keeps its reading palette. */
+/* The standalone lesson preview and the Modern V2 Learning Lab follow the site theme; the Neobrutal Learning Lab keeps
+   its reading palette. Buttons use the shared site button styles. */
 html[data-ui-customized="true"] .course-preview-page,
-html[data-ui-customized="true"] .course-preview-page .course-lesson-view {
+html[data-ui-customized="true"] :is(.course-preview-page, [data-interface-version="v2"] .lab-v2-shell) .course-lesson-view {
   background: var(--background);
   color: var(--foreground);
 }
-html[data-ui-customized="true"] .course-preview-page .course-lesson-view {
+html[data-ui-customized="true"] :is(.course-preview-page, [data-interface-version="v2"] .lab-v2-shell) .course-lesson-view {
   --ink: var(--foreground);
   --ink-soft: var(--muted-foreground);
   --outline: var(--border);
@@ -87,61 +88,87 @@ html[data-ui-customized="true"] .course-preview-page .course-lesson-view {
   --surface-container: var(--muted);
   color-scheme: normal;
 }
-html[data-ui-customized="true"][data-theme="light"] .course-preview-page .course-lesson-view { --primary: var(--ui-accent); }
-html[data-ui-customized="true"][data-theme="dark"] .course-preview-page .course-lesson-view { --primary: var(--ui-dark-primary); }
-html[data-ui-customized="true"] .course-preview-page :is(.course-lesson-heading, .course-lesson-body) {
+html[data-ui-customized="true"][data-theme="light"] :is(.course-preview-page, [data-interface-version="v2"] .lab-v2-shell) .course-lesson-view { --primary: var(--ui-accent); }
+html[data-ui-customized="true"][data-theme="dark"] :is(.course-preview-page, [data-interface-version="v2"] .lab-v2-shell) .course-lesson-view { --primary: var(--ui-dark-primary); }
+html[data-ui-customized="true"] :is(.course-preview-page, [data-interface-version="v2"] .lab-v2-shell) :is(.course-lesson-heading, .course-lesson-body) {
   border-color: var(--ui-card-border);
   border-radius: var(--ui-card-radius);
   background: var(--ui-card-bg);
   color: var(--ink);
 }
-html[data-ui-customized="true"] .course-preview-page .course-lesson-heading > p {
+html[data-ui-customized="true"] :is(.course-preview-page, [data-interface-version="v2"] .lab-v2-shell) .course-lesson-heading > p {
   border-color: var(--primary);
   background: color-mix(in srgb, var(--primary) 18%, var(--ui-card-bg));
   color: var(--ink);
 }
-html[data-ui-customized="true"] .course-preview-page .lesson-markdown :is(h2, h3) { color: var(--ink); }
-html[data-ui-customized="true"] .course-preview-page .lesson-markdown li::marker { color: var(--primary); }
-html[data-ui-customized="true"] .course-preview-page .lesson-markdown a { color: var(--primary); }
-html[data-ui-customized="true"] .course-preview-page .lesson-markdown :not(pre) > code {
+html[data-ui-customized="true"] :is(.course-preview-page, [data-interface-version="v2"] .lab-v2-shell) .lesson-markdown :is(h2, h3) { color: var(--ink); }
+html[data-ui-customized="true"] :is(.course-preview-page, [data-interface-version="v2"] .lab-v2-shell) .lesson-markdown li::marker { color: var(--primary); }
+html[data-ui-customized="true"] :is(.course-preview-page, [data-interface-version="v2"] .lab-v2-shell) .lesson-markdown a { color: var(--primary); }
+html[data-ui-customized="true"] :is(.course-preview-page, [data-interface-version="v2"] .lab-v2-shell) .lesson-markdown :not(pre) > code {
   background: var(--surface-container);
   color: var(--primary);
 }
-html[data-ui-customized="true"] .course-preview-page .lesson-markdown pre {
+html[data-ui-customized="true"] :is(.course-preview-page, [data-interface-version="v2"] .lab-v2-shell) .lesson-markdown pre {
   background: var(--ui-code-bg);
   color: var(--ui-code-text);
 }
-html[data-ui-customized="true"] .course-preview-page .lesson-copy-button {
-  border-color: var(--ui-button-bg);
-  background: var(--ui-button-bg);
-  color: var(--ui-button-text);
-}
-html[data-ui-customized="true"] .course-preview-page .lesson-copy-button:is(:hover, :focus-visible) {
-  background: var(--ui-button-focus-bg);
-  color: var(--ui-button-focus-text);
-}
-html[data-ui-customized="true"] .course-preview-page :is(.lesson-step, .lb-code-step, .lb-resource-link, .lb-diagram-node) {
+html[data-ui-customized="true"] :is(.course-preview-page, [data-interface-version="v2"] .lab-v2-shell) :is(.lesson-step, .lb-code-step, .lb-resource-link, .lb-diagram-node) {
   border-color: var(--ui-card-border);
   border-radius: var(--ui-field-radius);
   background: var(--surface-container);
   color: var(--ink);
 }
-html[data-ui-customized="true"] .course-preview-page .lesson-step-number {
+html[data-ui-customized="true"] :is(.course-preview-page, [data-interface-version="v2"] .lab-v2-shell) .lesson-step-number {
   background: var(--primary);
   color: var(--primary-foreground);
 }
-html[data-ui-customized="true"] .course-preview-page .lesson-callout {
+html[data-ui-customized="true"] :is(.course-preview-page, [data-interface-version="v2"] .lab-v2-shell) .lesson-callout {
   border-color: var(--outline);
   border-radius: var(--ui-field-radius);
   background: var(--surface-container);
   color: var(--ink);
 }
-html[data-ui-customized="true"] .course-preview-page .lesson-callout--primary { background: color-mix(in srgb, var(--primary) 16%, var(--surface)); }
-html[data-ui-customized="true"] .course-preview-page .lesson-callout--success { background: color-mix(in srgb, var(--lesson-success) 16%, var(--surface)); }
-html[data-ui-customized="true"] .course-preview-page .lesson-callout--warning { background: color-mix(in srgb, var(--amber) 16%, var(--surface)); }
-html[data-ui-customized="true"] .course-preview-page .lb-table-scroll,
-html[data-ui-customized="true"] .course-preview-page .lb-image img { border-color: var(--ui-card-border); border-radius: var(--ui-field-radius); }
-html[data-ui-customized="true"] .course-preview-page .lb-table th { background: var(--surface-container); color: var(--ink); }
-html[data-ui-customized="true"] .course-preview-page .lb-table td { background: var(--surface); color: var(--ink); }
-html[data-ui-customized="true"] .course-preview-page .lb-warning { color: var(--ink); background: color-mix(in srgb, var(--amber) 18%, var(--surface)); }
-html[data-ui-customized="true"] .course-preview-page .lb-invalid { color: var(--destructive); background: color-mix(in srgb, var(--destructive) 12%, var(--surface)); }
+html[data-ui-customized="true"] :is(.course-preview-page, [data-interface-version="v2"] .lab-v2-shell) .lesson-callout--primary { background: color-mix(in srgb, var(--primary) 16%, var(--surface)); }
+html[data-ui-customized="true"] :is(.course-preview-page, [data-interface-version="v2"] .lab-v2-shell) .lesson-callout--success { background: color-mix(in srgb, var(--lesson-success) 16%, var(--surface)); }
+html[data-ui-customized="true"] :is(.course-preview-page, [data-interface-version="v2"] .lab-v2-shell) .lesson-callout--warning { background: color-mix(in srgb, var(--amber) 16%, var(--surface)); }
+html[data-ui-customized="true"] :is(.course-preview-page, [data-interface-version="v2"] .lab-v2-shell) .lb-table-scroll,
+html[data-ui-customized="true"] :is(.course-preview-page, [data-interface-version="v2"] .lab-v2-shell) .lb-image img { border-color: var(--ui-card-border); border-radius: var(--ui-field-radius); }
+html[data-ui-customized="true"] :is(.course-preview-page, [data-interface-version="v2"] .lab-v2-shell) .lb-table th { background: var(--surface-container); color: var(--ink); }
+html[data-ui-customized="true"] :is(.course-preview-page, [data-interface-version="v2"] .lab-v2-shell) .lb-table td { background: var(--surface); color: var(--ink); }
+html[data-ui-customized="true"] :is(.course-preview-page, [data-interface-version="v2"] .lab-v2-shell) .lb-warning { color: var(--ink); background: color-mix(in srgb, var(--amber) 18%, var(--surface)); }
+html[data-ui-customized="true"] :is(.course-preview-page, [data-interface-version="v2"] .lab-v2-shell) .lb-invalid { color: var(--destructive); background: color-mix(in srgb, var(--destructive) 12%, var(--surface)); }
+html[data-ui-customized="true"] :is(.course-preview-page, [data-interface-version="v2"] .lab-v2-shell) .course-lesson-view {
+  font-family: var(--font-sans), "PingFang SC", "Microsoft YaHei", "Noto Sans SC", sans-serif;
+}
+html[data-ui-customized="true"] :is(.course-preview-page, [data-interface-version="v2"] .lab-v2-shell) :is(.lesson-code-block, .lb-code-source) {
+  border-color: var(--ui-code-border);
+  border-radius: var(--ui-field-radius);
+  background: var(--ui-code-bg);
+  color: var(--ui-code-text);
+}
+html[data-ui-customized="true"] :is(.course-preview-page, [data-interface-version="v2"] .lab-v2-shell) :is(.lesson-code-block, .lb-code-source) > header {
+  border-bottom-color: color-mix(in srgb, var(--ui-code-text) 16%, var(--ui-code-bg));
+  background: color-mix(in srgb, var(--ui-code-text) 8%, var(--ui-code-bg));
+  color: var(--ui-code-text);
+}
+html[data-ui-customized="true"] :is(.course-preview-page, [data-interface-version="v2"] .lab-v2-shell) .lesson-code-block > p { color: var(--ui-code-text); }
+
+/* Modern V2 Learning Lab: the Learning Path panel and lesson picker use the page palette instead of the paper tones. */
+html[data-ui-customized="true"][data-interface-version="v2"] .lab-v2-shell :is(.course-learning-path, .course-lesson-navigation) {
+  background: var(--background);
+  color: var(--foreground);
+}
+html[data-ui-customized="true"][data-interface-version="v2"] .lab-v2-shell .course-lesson-navigation { border-bottom-color: var(--border); }
+html[data-ui-customized="true"][data-interface-version="v2"] .lab-v2-shell .course-lesson-navigation > select {
+  min-height: var(--ui-field-height);
+  border: var(--ui-field-border-width) solid var(--ui-field-border);
+  border-radius: var(--ui-field-radius);
+  background: var(--ui-field-bg);
+  color: var(--ui-field-text);
+}
+html[data-ui-customized="true"][data-interface-version="v2"] .lab-v2-shell .course-lesson-navigation > select:focus-visible {
+  border-color: var(--ui-focus-border);
+  outline: 3px solid color-mix(in srgb, var(--ui-focus-border) 35%, transparent);
+  outline-offset: 1px;
+}
+html[data-ui-customized="true"][data-interface-version="v2"] .lab-v2-shell .course-load-status { color: var(--foreground); }

@@ -39,7 +39,7 @@ At the starting audit, the app shell had a collapsible `v1` sidebar and a topbar
 | Overlays | **4 dialogs, 2 popovers, 2 dropdowns** | Course confirmations/image preview, editor demo, search, notifications, account menu, editor demo menu. The lesson image lightbox is custom. |
 | Loading skeleton | **7 sites** | Account loading and editor preview. |
 
-These counts exclude `/workspace` and its own learning controls. The three Learning Path buttons inside the Advanced Settings **preview** are included because that preview appears on `/settings`.
+These counts exclude `/workspace` and its own learning controls. The Learning Lab now uses the shared button styles too; its only custom button is the floating AI button.
 
 ### The 21 Card contexts
 
@@ -72,7 +72,7 @@ The six primitive variants are a starting point, but page CSS gives them differe
 9. Settings toggles: light/dark and scrollbar visibility.
 10. Overlays and content tools: dialog close/confirm, notification close, copy code, image lightbox.
 11. Provider actions: disabled Google/other provider sign-in buttons.
-12. Editor-only examples: four primitive variants and the Learning Path button preview.
+12. Editor-only examples: four primitive variants.
 
 These are **12 design jobs**, not 12 extra `Button` variants. Some jobs currently share a primitive variant but have their own CSS. The fixed class names on buttons include `primary-button`, `provider-button`, `password-toggle`, `search-button`, `restart-course-button`, `continue-course-button`, `settings-action-toggle`, `lesson-copy-button`, and several close/icon classes. Selection states use `active`, `selected`, `complete`, and `aria-current`.
 
