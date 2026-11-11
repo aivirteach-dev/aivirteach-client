@@ -9,7 +9,7 @@ import { Card } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { Sidebar } from "../components/Sidebar";
 import { api, ApiError, courseAssetUrl, type ApiCourse, type EnrollmentStatus, type LearningSnapshotCommand } from "../lib/api";
-import { courseCardState, courseEntryPath, courseEntryPathAfterEnroll, courseIdAfterRestart, resolveEnrollmentStatus } from "../lib/course-card-state";
+import { courseCardState, courseEntryPath, courseEntryPathAfterEnroll, courseWelcomePath, courseIdAfterRestart, resolveEnrollmentStatus } from "../lib/course-card-state";
 import { restartCommandForCourse } from "../lib/restart-command";
 import { activateCourse, clearActiveCourse, clearCourseProgressCache, type DemoCourse } from "../lib/courses";
 import { resetMockCourseProgress, startMockCourse } from "../lib/mock-course";
@@ -112,7 +112,8 @@ export default function CoursesPage() {
   function selectCourse(course: DemoCourse) {
     if (activeCourseId === course.id) {
       activateCourse(course.id);
-      router.push(course.localOnly ? "/courses/python-basics" : courseEntryPath(statusByCourse[course.id]));
+      const path = courseEntryPath(statusByCourse[course.id]);
+      router.push(course.localOnly ? "/courses/python-basics" : path === "/courses/welcome" ? courseWelcomePath(course.id) : path);
       return;
     }
     if (!activeCourseId) {
@@ -132,15 +133,24 @@ export default function CoursesPage() {
       router.push("/courses/python-basics");
       return;
     }
+    const beforeEnroll = statusByCourse[course.id];
+    if (beforeEnroll === undefined || beforeEnroll === "not_started") {
+      // A new course is only previewed here; the welcome page enrolls on "Start lesson 1",
+      // so leaving the welcome page does not start (or switch) anything.
+      setPendingCourse(null);
+      setStarting(false);
+      router.push(courseWelcomePath(course.id));
+      return;
+    }
     try {
-      const beforeEnroll = statusByCourse[course.id];
       const enrollment = await api.enroll(course.id);
       const afterEnroll = resolveEnrollmentStatus(enrollment.status, enrollment.active);
       activateCourse(course.id);
       setActiveCourseId(course.id);
       setStatusByCourse((previous) => ({ ...previous, [enrollment.courseId]: afterEnroll }));
       setPendingCourse(null);
-      router.push(courseEntryPathAfterEnroll(beforeEnroll, afterEnroll));
+      const path = courseEntryPathAfterEnroll(beforeEnroll, afterEnroll);
+      router.push(path === "/courses/welcome" ? courseWelcomePath(course.id) : path);
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Could not start this course.");
       setPendingCourse(null);

@@ -28,6 +28,7 @@ import { getSavedThemePresets } from "../lib/site-ui-customization";
 import { clearThemePresetsPreview, defaultThemePresets, getPreviewThemePresets, getThemePreset, previewThemePresets, replaceThemePreset, updateThemePreset, type ThemePresets } from "../lib/theme-presets";
 import { clearInterfaceVersionPreview, clearStoredInterfaceVersion, getServerInterfaceVersion, getStoredInterfaceVersion, previewInterfaceVersion, subscribeToInterfaceVersion, type InterfaceVersion } from "../lib/interface-version";
 import { clearStoredTheme, clearThemePreview, getServerTheme, getStoredTheme, previewTheme, subscribeToTheme, type Theme } from "../lib/theme";
+import { applyScrollbarPreference, getServerScrollbarPreference, getStoredScrollbarPreference, subscribeToScrollbarPreference } from "../lib/scrollbar-preference";
 
 type Translate = (english: string, chinese: string) => string;
 
@@ -72,6 +73,7 @@ export function AdvancedUiSettings({ t }: { t: Translate }) {
   const presetsRef = useRef<ThemePresets>(defaultThemePresets);
   const interfaceVersion = useSyncExternalStore(subscribeToInterfaceVersion, getStoredInterfaceVersion, getServerInterfaceVersion);
   const theme = useSyncExternalStore(subscribeToTheme, getStoredTheme, getServerTheme);
+  const scrollbarPreference = useSyncExternalStore(subscribeToScrollbarPreference, getStoredScrollbarPreference, getServerScrollbarPreference);
 
   useEffect(() => {
     let cancelled = false;
@@ -210,6 +212,12 @@ export function AdvancedUiSettings({ t }: { t: Translate }) {
             <p className="advanced-control-description" aria-live="polite">{t("Editing", "正在编辑")}: {interfaceVersion === "v2" ? t("Modern V2", "现代 V2") : t("Neobrutalism", "新粗野主义")} · {theme === "light" ? t("Light", "浅色") : t("Dark", "深色")}</p>
             <Button type="button" variant="outline" onClick={() => updateThemeMode(theme === "dark" ? "light" : "dark")}>
               {theme === "dark" ? t("Light", "浅色") : t("Dark", "深色")}
+            </Button>
+          </fieldset>
+          <fieldset><legend>{t("Scrollbars", "滚动条")}</legend>
+            <p className="advanced-control-description">{t("Keep thin scrollbars visible for orientation, or hide them for a cleaner workspace. This applies right away on this device and is not part of the saved theme.", "显示细滚动条以便定位，或将其隐藏以获得更简洁的工作区。此设置会立即在本设备上生效，不属于已保存的主题。")}</p>
+            <Button type="button" variant="outline" aria-label={scrollbarPreference === "hidden" ? t("Show scrollbars", "显示滚动条") : t("Hide scrollbars", "隐藏滚动条")} onClick={() => applyScrollbarPreference(scrollbarPreference === "hidden" ? "visible" : "hidden")}>
+              {scrollbarPreference === "hidden" ? t("Show", "显示") : t("Hide", "隐藏")}
             </Button>
           </fieldset>
           <fieldset><legend>{t("App shell", "应用外壳")}</legend>

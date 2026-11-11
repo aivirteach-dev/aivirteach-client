@@ -24,7 +24,6 @@ const cardSamples: CardSample[] = [
   { role: "dashboard-stat", className: "stat-card", tone: "practice", title: "Practice statistic", chinese: "练习统计", route: "/dashboard" },
   { role: "dashboard-stat", className: "stat-card", tone: "skills", title: "Skills statistic", chinese: "技能统计", route: "/dashboard" },
   { role: "catalog-course", className: "catalog-card", title: "Catalog course", chinese: "课程目录卡片", route: "/courses" },
-  { role: "course-welcome", className: "course-welcome-window", title: "Course welcome", chinese: "课程欢迎页", route: "/courses/welcome" },
   { role: "course-required", className: "course-required-card", title: "Course fallback", chinese: "课程提示卡片", route: "/courses/welcome" },
   { role: "demo-course-outline", className: "mock-course-outline", title: "Lesson outline", chinese: "课程目录", route: "/courses/python-basics" },
   { role: "demo-course-lesson", className: "mock-course-lesson", title: "Lesson article", chinese: "课程内容", route: "/courses/python-basics" },
@@ -51,8 +50,6 @@ function SampleContent({ sample, t }: { sample: CardSample; t: Translate }) {
       return <><span className="stat-icon" aria-hidden="true">★</span><div><strong>{sample.tone === "streak" ? "12" : sample.tone === "practice" ? "8.5 h" : "7"}</strong><span>{t(sample.title, sample.chinese)}</span></div></>;
     case "catalog-course":
       return <><div className="catalog-image-wrap" data-ui-role="catalog-media"><div className="catalog-art" data-ui-role="catalog-art" /></div><div className="catalog-copy"><div><Badge variant="secondary">{t("Available", "可学习")}</Badge><h2>Python Foundations</h2><p>{t("Learn practical programming skills.", "学习实用编程技能。")}</p></div><Button type="button">{t("Start course", "开始课程")}</Button></div></>;
-    case "course-welcome":
-      return <><h2>{t("Welcome to Python", "欢迎学习 Python")}</h2><p>{t("Build your first program step by step.", "逐步编写你的第一个程序。")}</p><Button type="button">{t("Start learning", "开始学习")}</Button></>;
     case "course-required":
       return <><h2>{t("Choose a course", "选择课程")}</h2><p>{t("Select a course to continue.", "选择课程后继续。")}</p><Button type="button">{t("Browse courses", "浏览课程")}</Button></>;
     case "demo-course-outline":

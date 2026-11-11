@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { courseCardState, courseEntryPath, courseEntryPathAfterEnroll, courseIdAfterRestart, resolveEnrollmentStatus } from "./course-card-state";
+import { courseCardState, courseEntryPath, courseEntryPathAfterEnroll, courseIdAfterRestart, courseWelcomePath, resolveEnrollmentStatus } from "./course-card-state";
 
 describe("courseCardState", () => {
   it("没有报名记录：未开始，只显示 Start", () => {
@@ -84,5 +84,12 @@ describe("courseEntryPath", () => {
     const card = courseCardState(undefined, true);
     expect(card.actions).toContain("continue");
     expect(courseEntryPath(card.status)).toBe("/workspace");
+  });
+});
+
+describe("courseWelcomePath", () => {
+  it("names the course so the welcome page can preview it without enrolling", () => {
+    expect(courseWelcomePath("ai-daily-briefing")).toBe("/courses/welcome?course=ai-daily-briefing");
+    expect(courseWelcomePath("a b/c")).toBe("/courses/welcome?course=a%20b%2Fc");
   });
 });

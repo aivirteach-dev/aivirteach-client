@@ -232,7 +232,25 @@ export type ApiCourseWelcome = {
   finalOutcome: string | null;
 };
 
-export type EnrollmentStatus = "not_started" | "in_progress" | "completed";
+// The local demo API (../backend) still returns the course's welcome.json as authored.
+type LocalCourseWelcome = {
+  overviewAssetId?: string | null;
+  overview: { heading?: string; paragraphs?: string[] };
+  howItWorks?: { steps?: unknown };
+  finalOutcome?: { description?: string };
+};
+
+function fromLocalCourseWelcome(welcome: LocalCourseWelcome): ApiCourseWelcome {
+  return {
+    overviewAssetId: welcome.overviewAssetId ?? null,
+    overviewHeading: welcome.overview.heading ?? null,
+    overviewParagraphs: welcome.overview.paragraphs ?? [],
+    howItWorksSteps: welcome.howItWorks?.steps ?? null,
+    finalOutcome: welcome.finalOutcome?.description ?? null,
+  };
+}
+
+export type EnrollmentStatus ="not_started" | "in_progress" | "completed";
 
 export type ApiTutorContext = { courseVersionId: string; lessonId: string; generation: number };
 export type AskTutorCommand = { requestId: string; text: string; context: ApiTutorContext };
@@ -388,7 +406,10 @@ export const api = {
   markAllNotificationsRead: () => request<{ updated: number; readAt: string }>("/notifications/read-all", { method: "POST" }),
   courses: () => request<ApiCourse[]>("/courses"),
   course: (courseId: string) => request<ApiCourseDetail>("/courses/" + encodeURIComponent(courseId)),
-  courseWelcome: (courseId: string) => request<ApiCourseWelcome>("/courses/" + encodeURIComponent(courseId) + "/welcome"),
+  courseWelcome: async (courseId: string) => {
+    const welcome = await request<ApiCourseWelcome | LocalCourseWelcome>("/courses/" + encodeURIComponent(courseId) + "/welcome");
+    return "overview" in welcome ? fromLocalCourseWelcome(welcome) : welcome;
+  },
   lesson: async (courseId: string, lessonId: string) => {
     const lesson = await request<ApiLesson>("/courses/" + encodeURIComponent(courseId) + "/lessons/" + encodeURIComponent(lessonId));
     if (!lesson || typeof lesson !== "object" || !Array.isArray(lesson.blocks)) {
