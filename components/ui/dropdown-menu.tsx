@@ -14,4 +14,10 @@ function DropdownMenuItem({ className, variant = "default", ...props }: MenuPrim
   return <MenuPrimitive.Item data-slot="dropdown-menu-item" data-variant={variant} className={cn("relative flex cursor-default items-center gap-1.5 rounded-md px-1.5 py-1 text-sm outline-none select-none focus:bg-accent focus:text-accent-foreground data-[variant=destructive]:text-destructive data-[variant=destructive]:focus:bg-destructive/10 data-disabled:pointer-events-none data-disabled:opacity-50", className)} {...props} />
 }
 
-export { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem }
+function DropdownMenuRadioGroup(props: MenuPrimitive.RadioGroup.Props) { return <MenuPrimitive.RadioGroup data-slot="dropdown-menu-radio-group" {...props} /> }
+
+function DropdownMenuRadioItem({ className, ...props }: MenuPrimitive.RadioItem.Props) {
+  return <MenuPrimitive.RadioItem data-slot="dropdown-menu-item" data-variant="default" className={cn("relative flex cursor-default items-center gap-1.5 rounded-md px-1.5 py-1 text-sm outline-none select-none focus:bg-accent focus:text-accent-foreground data-disabled:pointer-events-none data-disabled:opacity-50", className)} {...props} />
+}
+
+export { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuRadioGroup, DropdownMenuRadioItem }

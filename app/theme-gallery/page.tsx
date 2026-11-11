@@ -229,7 +229,7 @@ export default function ThemeGalleryPage() {
       <GallerySection id="data" title={t("Status and data", "状态与数据")} description={t("Badges, alerts, charts, achievements, loading", "徽章、提醒、图表、成就与加载")}>
         <div className="gallery-grid">
           <GalleryPanel title={t("Badges and alerts", "徽章与提醒")}><div className="gallery-row"><Badge>Default</Badge><Badge variant="secondary">Secondary</Badge><Badge data-ui-tone="success">Complete</Badge><Badge data-ui-tone="warning">Review</Badge><Badge variant="destructive">Error</Badge></div><Alert><AlertTitle>Information</AlertTitle><AlertDescription>Progress saved.</AlertDescription></Alert><Alert variant="destructive"><AlertTitle>Error</AlertTitle><AlertDescription>Please retry.</AlertDescription></Alert></GalleryPanel>
-          <GalleryPanel title={t("Progress and chart", "进度与图表")}><p>Weekly goal · 68%</p><Progress value={68} /><div className="theme-gallery-mini-chart" aria-label="Sample activity chart"><span /><span /><span /><span /><span /></div></GalleryPanel>
+          <GalleryPanel title={t("Progress and chart", "进度与图表")}><p>Course progress · 68%</p><Progress value={68} /><div className="theme-gallery-mini-chart" aria-label="Sample activity chart"><span /><span /><span /><span /><span /></div></GalleryPanel>
           <GalleryPanel title={t("Loading and achievement", "加载与成就")}><div className="gallery-row"><Badge data-ui-tone="success">★ First lesson</Badge><Badge variant="outline">Locked</Badge></div><Skeleton /><Skeleton className="gallery-skeleton-short" /></GalleryPanel>
         </div>
       </GallerySection>

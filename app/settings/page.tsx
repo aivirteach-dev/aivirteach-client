@@ -5,13 +5,18 @@ import { useRouter } from "next/navigation";
 import { useEffect, useLayoutEffect, useState, useSyncExternalStore } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Select } from "@/components/ui/select";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Sidebar } from "../components/Sidebar";
 import { AdvancedUiSettings } from "../components/AdvancedUiSettings";
 import { api } from "../lib/api";
 import { applyLearningLanguage, localize, useLearningLanguage, type LearningLanguage } from "../lib/language";
 import { applyTheme, getServerTheme, getStoredTheme, subscribeToTheme, type Theme } from "../lib/theme";
-import { applyScrollbarPreference, getServerScrollbarPreference, getStoredScrollbarPreference, subscribeToScrollbarPreference, type ScrollbarPreference } from "../lib/scrollbar-preference";
+
+// Advanced theme settings (theme editor and scrollbar toggle) are hidden from the list for now.
+// /settings?tab=advanced still opens them.
+const showAdvancedThemeSettings = false;
+
+const languageNames: Record<LearningLanguage, string> = { en: "English", "zh-CN": "简体中文" };
 
 export default function SettingsPage() {
   const router = useRouter();
@@ -19,7 +24,6 @@ export default function SettingsPage() {
   const theme = useSyncExternalStore(subscribeToTheme, getStoredTheme, getServerTheme);
   const learningLanguage = useLearningLanguage();
   const t = (english: string, chinese: string) => localize(learningLanguage, english, chinese);
-  const scrollbarPreference = useSyncExternalStore(subscribeToScrollbarPreference, getStoredScrollbarPreference, getServerScrollbarPreference);
 
   useEffect(() => {
     let active = true;
@@ -52,10 +56,6 @@ export default function SettingsPage() {
     applyLearningLanguage(nextLanguage);
   }
 
-  function chooseScrollbarPreference(nextPreference: ScrollbarPreference) {
-    applyScrollbarPreference(nextPreference);
-  }
-
   function logOut() {
     void api.logout().finally(() => router.replace("/login"));
   }
@@ -78,13 +78,16 @@ export default function SettingsPage() {
 
           <Card as="article" className="settings-card" uiRole="settings-row">
             <div><span className="settings-card-icon" aria-hidden="true">文</span><div><h2>{t("Language", "语言")}</h2><p>{t("Change the language across AIVirTeach, including Learning Lab V2.", "更改整个 AIVirTeach（包括学习实验室 V2）的语言。")}</p></div></div>
-            <label className="settings-select">
-              <span>{t("Application language", "应用语言")}</span>
-              <Select value={learningLanguage} onChange={(event) => chooseLearningLanguage(event.target.value as LearningLanguage)}>
-                <option value="en">English</option>
-                <option value="zh-CN">简体中文</option>
-              </Select>
-            </label>
+            <DropdownMenu>
+              <DropdownMenuTrigger render={<Button className="settings-language-trigger" variant="outline" type="button" aria-label={`${t("Application language", "应用语言")}: ${languageNames[learningLanguage]}`} />}>
+                {languageNames[learningLanguage]}
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="settings-language-menu" align="center">
+                <DropdownMenuRadioGroup value={learningLanguage} onValueChange={(value) => chooseLearningLanguage(value as LearningLanguage)}>
+                  {(Object.keys(languageNames) as LearningLanguage[]).map((language) => <DropdownMenuRadioItem key={language} value={language} lang={language} closeOnClick>{languageNames[language]}</DropdownMenuRadioItem>)}
+                </DropdownMenuRadioGroup>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </Card>
 
           <Card as="article" className="settings-card" uiRole="settings-row">
@@ -94,17 +97,10 @@ export default function SettingsPage() {
             </Button>
           </Card>
 
-          <Card as="article" className="settings-card" uiRole="settings-row">
-            <div><span className="settings-card-icon" aria-hidden="true">↕</span><div><h2>{t("Toggle scrollbar visibility", "切换滚动条显示")}</h2><p>{t("Keep thin scrollbars visible for orientation, or hide them for a cleaner workspace.", "显示细滚动条以便定位，或将其隐藏以获得更简洁的工作区。")}</p></div></div>
-            <Button className="settings-action-toggle" data-ui-role="settings-toggle" variant="outline" type="button" aria-label={scrollbarPreference === "hidden" ? t("Show scrollbars", "显示滚动条") : t("Hide scrollbars", "隐藏滚动条")} onClick={() => chooseScrollbarPreference(scrollbarPreference === "hidden" ? "visible" : "hidden")}>
-              {scrollbarPreference === "hidden" ? t("Show", "显示") : t("Hide", "隐藏")}
-            </Button>
-          </Card>
-
-          <Card as="article" className="settings-card advanced-settings-card" uiRole="settings-row">
+          {showAdvancedThemeSettings && <Card as="article" className="settings-card advanced-settings-card" uiRole="settings-row">
             <div><span className="settings-card-icon advanced-setting-icon" aria-hidden="true">⚙</span><div><h2>{t("Advanced theme settings", "高级主题设置")}</h2><p>{t("Choose an interface style and customize shared component colors, sizes, spacing, and focus styles.", "选择界面风格，并自定义共享组件的颜色、尺寸、间距和聚焦样式。")}</p></div></div>
             <Button variant="outline" type="button" onClick={openAdvanced}>{t("Open themes", "打开主题设置")}</Button>
-          </Card>
+          </Card>}
 
           <Card as="article" className="settings-card" uiRole="settings-row">
             <div><span className="settings-card-icon notification-setting-icon" aria-hidden="true" /><div><h2>{t("Notifications", "通知")}</h2><p>{t("Control reminders, milestones, and learning updates.", "管理提醒、里程碑和学习更新。")}</p></div></div>

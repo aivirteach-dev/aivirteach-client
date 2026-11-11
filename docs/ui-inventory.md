@@ -9,13 +9,13 @@ Audit date: 2026-10-27. Scope: all `app/**/page.tsx` routes except `/workspace`,
 | `/` | Redirects to `/login`; no UI. |
 | `/login` | Brand, decorative glows, form card, local demo account choices, email/password fields, password reveal, remember checkbox, primary submit, disabled provider buttons, text links, theme icon, error alert. |
 | `/create-account` | Same auth shell and form card, five text/password fields, terms checkbox, submit, text link, theme icon, error alert. |
-| `/dashboard` | Shared navigation, greeting, current-course card, category badge, progress bar, resume CTA, three stat cards with icon tiles. The starting audit included an inline search form in `v1`; the current two-style UI uses topbar search. |
+| `/dashboard` | Shared navigation, greeting, current-course card, category badge, progress bar, resume CTA, three stat cards with icon tiles. With no active course it shows a greeting, paused courses with Continue, up to three new-course cards with Preview, and completed courses instead; stats and activity appear only when the learner has history. The starting audit included an inline search form in `v1`; the current two-style UI uses topbar search. |
 | `/courses` | Catalog header, image-led course cards, status badges, enlarge-image controls, start/continue/restart actions, enrollment and restart confirmation dialogs, image preview dialog, alerts. |
-| `/courses/welcome` | Full-page step window, step progress, overview image and content, walkthrough video/placeholder, back/next/start actions, no-active-course fallback card. |
+| `/courses/welcome` | One-page welcome card: title, intro, course-fact chips, "Before you start" list, close and "Start lesson 1" buttons, and an illustration panel (AI Daily Briefing has its own flow and example emails; other courses show their authored steps and welcome image). No-active-course fallback card. |
 | `/courses/python-basics` | Demo course progress strip, sticky lesson outline, lesson article, code example, multiple-choice answers, correct/incorrect feedback, previous/next/check actions. |
 | `/analysis` | Date-range segmented control, three metric cards, progress bar, weekly bar chart, four achievement cards. |
 | `/analysis/v2` | Course summary card and progress graphic, date-range control, three metric cards, weekly activity panel/chart, insight card, four achievement cards. |
-| `/settings` | Eight settings rows: profile, language, theme, scrollbars, advanced theme, notifications, privacy, logout. Notifications and privacy actions are disabled placeholders. Advanced tab has an editor and component previews. |
+| `/settings` | Six settings rows: profile, language, theme, notifications, privacy, logout. Notifications and privacy actions are disabled placeholders. The advanced theme row is hidden for now; `/settings?tab=advanced` still opens the advanced tab, which has the scrollbar toggle, an editor and component previews. |
 | `/settings/profile` | Profile summary card, name/email/role fields, save/reset/logout actions. |
 | `/preview/lesson` | Internal lesson preview, populated by a parent message. Uses the same reading-surface components as Learning Lab; included here because it is a separate route. Its 13 block types are heading, paragraph, bullet list, numbered list, code, step, callout, table, image, resource link, divider, annotated code, and diagram. |
 
@@ -39,16 +39,16 @@ At the starting audit, the app shell had a collapsible `v1` sidebar and a topbar
 | Overlays | **4 dialogs, 2 popovers, 2 dropdowns** | Course confirmations/image preview, editor demo, search, notifications, account menu, editor demo menu. The lesson image lightbox is custom. |
 | Loading skeleton | **7 sites** | Account loading and editor preview. |
 
-These counts exclude `/workspace` and its own learning controls. The three Learning Path buttons inside the Advanced Settings **preview** are included because that preview appears on `/settings`.
+These counts exclude `/workspace` and its own learning controls. The Learning Lab now uses the shared button styles too; its only custom button is the floating AI button.
 
-### The 21 Card contexts
+### The 20 Card contexts
 
 | Family | Contexts | Count |
 | --- | --- | ---: |
 | App chrome | Sidebar; topbar | 2 |
 | Auth | Login/signup form card | 1 |
 | Dashboard | Current-course card; statistic card | 2 |
-| Courses | Catalog course card; welcome window; required-course fallback; demo course outline; demo lesson article | 5 |
+| Courses | Catalog course card; required-course fallback; demo course outline; demo lesson article | 4 |
 | Analytics | Classic metric, chart, achievement; V2 course summary, metric, weekly panel, insight, achievement | 8 |
 | Settings | Settings row; profile summary/form | 2 |
 | Theme editor | Component preview card | 1 |
@@ -69,10 +69,10 @@ The six primitive variants are a starting point, but page CSS gives them differe
 6. Inline links: auth links, analytics details, course back link, theme-preview banner.
 7. Selection controls: date-range segments, demo account options, quiz answers, lesson rows.
 8. Course workflow: continue/restart/start and confirmation actions.
-9. Settings toggles: light/dark and scrollbar visibility.
+9. Settings toggles: light/dark, and scrollbar visibility on the advanced tab.
 10. Overlays and content tools: dialog close/confirm, notification close, copy code, image lightbox.
 11. Provider actions: disabled Google/other provider sign-in buttons.
-12. Editor-only examples: four primitive variants and the Learning Path button preview.
+12. Editor-only examples: four primitive variants.
 
 These are **12 design jobs**, not 12 extra `Button` variants. Some jobs currently share a primitive variant but have their own CSS. The fixed class names on buttons include `primary-button`, `provider-button`, `password-toggle`, `search-button`, `restart-course-button`, `continue-course-button`, `settings-action-toggle`, `lesson-copy-button`, and several close/icon classes. Selection states use `active`, `selected`, `complete`, and `aria-current`.
 

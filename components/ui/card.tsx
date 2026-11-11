@@ -8,7 +8,6 @@ export type CardUiRole =
   | "dashboard-course"
   | "dashboard-stat"
   | "catalog-course"
-  | "course-welcome"
   | "course-required"
   | "demo-course-outline"
   | "demo-course-lesson"

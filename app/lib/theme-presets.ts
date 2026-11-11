@@ -4,7 +4,6 @@ import type { Theme } from "./theme";
 
 const styleKeys = [
   "buttonHeight", "buttonFontSize", "buttonRadius", "buttonBorderWidth",
-  "learningPathButtonHeight", "learningPathButtonFontSize", "learningPathButtonRadius", "learningPathButtonShadow",
   "fieldHeight", "fieldFontSize", "fieldRadius", "fieldBorderWidth", "cardRadius", "cardPadding", "cardBorderWidth",
 ] as const satisfies readonly (keyof UiCustomization)[];
 

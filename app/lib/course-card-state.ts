@@ -47,6 +47,12 @@ export function courseEntryPathAfterEnroll(
     : courseEntryPath(after ?? before);
 }
 
+// The welcome page for one course. Opening it does not enroll: the course starts
+// only when the learner presses "Start lesson 1".
+export function courseWelcomePath(courseId: string) {
+  return `/courses/welcome?course=${encodeURIComponent(courseId)}`;
+}
+
 // Restart deactivates every enrollment, including a different currently active course.
 export function courseIdAfterRestart(enrollment: { courseId: string; active: boolean }): string | null {
   return enrollment.active ? enrollment.courseId : null;

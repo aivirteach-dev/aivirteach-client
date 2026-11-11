@@ -3,6 +3,7 @@
 import { type ComponentPropsWithoutRef, useRef, useState } from "react";
 import { Markdown } from "@tanstack/markdown/react";
 import { streamingMarkdownExtension } from "@tanstack/markdown/extensions/streaming";
+import { Button } from "@/components/ui/button";
 import { localize, useLearningLanguage } from "../lib/language";
 import { isSafeMarkdownHref } from "./markdown-safety";
 
@@ -28,7 +29,7 @@ function CodeBlock({ children, ...rest }: ComponentPropsWithoutRef<"pre">) {
 
   return <div className="tutor-code-block">
     <div className="tutor-code-toolbar">
-      <button type="button" onClick={copyCode}>{localize(language, "Copy code", "复制代码")}</button>
+      <Button variant="outline" size="xs" type="button" onClick={copyCode}>{localize(language, "Copy code", "复制代码")}</Button>
       <span role="status">{status === "copied" ? localize(language, "Copied", "已复制") : status === "failed" ? localize(language, "Copy failed; select the code to copy.", "复制失败，请选中代码复制。") : ""}</span>
     </div>
     <pre {...rest} ref={codeRef}>{children}</pre>

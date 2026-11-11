@@ -101,7 +101,7 @@ export function AchievementBadges({ profile, t }: { profile: DemoLearner; t: Tra
   );
 }
 
-/** Practice, tasks, streak, and goal in one divided strip. */
+/** Practice, tasks, and streak in one divided strip. */
 export function KeyNumbers({ profile, range, t }: { profile: DemoLearner; range: "30" | "all"; t: Translate }) {
   const practiceMinutes = range === "all" ? profile.stats.practiceMinutes : profile.stats.last30PracticeMinutes;
   const tasksCompleted = range === "all" ? profile.stats.tasksCompleted : profile.stats.last30TasksCompleted;
@@ -110,7 +110,6 @@ export function KeyNumbers({ profile, range, t }: { profile: DemoLearner; range:
       <div><span>{range === "all" ? t("Total practice", "总练习时间") : t("Practice time", "练习时间")}</span><strong>{Math.round(practiceMinutes / 6) / 10}h</strong></div>
       <div><span>{t("Tasks completed", "已完成任务")}</span><strong>{tasksCompleted}</strong></div>
       <div><span>{t("Current streak", "连续学习")}</span><strong>{t(`${profile.stats.streakDays} days`, `${profile.stats.streakDays} 天`)}</strong></div>
-      <div><span>{t("Weekly goal", "每周目标")}</span><strong>{profile.stats.weeklyGoalPercent}%</strong></div>
     </Card>
   );
 }

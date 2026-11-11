@@ -28,6 +28,7 @@ import { getSavedThemePresets } from "../lib/site-ui-customization";
 import { clearThemePresetsPreview, defaultThemePresets, getPreviewThemePresets, getThemePreset, previewThemePresets, replaceThemePreset, updateThemePreset, type ThemePresets } from "../lib/theme-presets";
 import { clearInterfaceVersionPreview, clearStoredInterfaceVersion, getServerInterfaceVersion, getStoredInterfaceVersion, previewInterfaceVersion, subscribeToInterfaceVersion, type InterfaceVersion } from "../lib/interface-version";
 import { clearStoredTheme, clearThemePreview, getServerTheme, getStoredTheme, previewTheme, subscribeToTheme, type Theme } from "../lib/theme";
+import { applyScrollbarPreference, getServerScrollbarPreference, getStoredScrollbarPreference, subscribeToScrollbarPreference } from "../lib/scrollbar-preference";
 
 type Translate = (english: string, chinese: string) => string;
 
@@ -72,6 +73,7 @@ export function AdvancedUiSettings({ t }: { t: Translate }) {
   const presetsRef = useRef<ThemePresets>(defaultThemePresets);
   const interfaceVersion = useSyncExternalStore(subscribeToInterfaceVersion, getStoredInterfaceVersion, getServerInterfaceVersion);
   const theme = useSyncExternalStore(subscribeToTheme, getStoredTheme, getServerTheme);
+  const scrollbarPreference = useSyncExternalStore(subscribeToScrollbarPreference, getStoredScrollbarPreference, getServerScrollbarPreference);
 
   useEffect(() => {
     let cancelled = false;
@@ -212,6 +214,12 @@ export function AdvancedUiSettings({ t }: { t: Translate }) {
               {theme === "dark" ? t("Light", "浅色") : t("Dark", "深色")}
             </Button>
           </fieldset>
+          <fieldset><legend>{t("Scrollbars", "滚动条")}</legend>
+            <p className="advanced-control-description">{t("Keep thin scrollbars visible for orientation, or hide them for a cleaner workspace. This applies right away on this device and is not part of the saved theme.", "显示细滚动条以便定位，或将其隐藏以获得更简洁的工作区。此设置会立即在本设备上生效，不属于已保存的主题。")}</p>
+            <Button type="button" variant="outline" aria-label={scrollbarPreference === "hidden" ? t("Show scrollbars", "显示滚动条") : t("Hide scrollbars", "隐藏滚动条")} onClick={() => applyScrollbarPreference(scrollbarPreference === "hidden" ? "visible" : "hidden")}>
+              {scrollbarPreference === "hidden" ? t("Show", "显示") : t("Hide", "隐藏")}
+            </Button>
+          </fieldset>
           <fieldset><legend>{t("App shell", "应用外壳")}</legend>
             <p className="advanced-control-description">{t("Shared topbar across the dashboard, courses, progress, and settings.", "仪表板、课程、进度与设置共用的顶部导航栏。")}</p>
             <ColorControl label={t("Topbar background", "顶部导航背景")} value={draft.shellBackground} onChange={(value) => update("shellBackground", value)} />
@@ -238,17 +246,6 @@ export function AdvancedUiSettings({ t }: { t: Translate }) {
             <RangeControl label={t("Font size", "字号")} value={draft.buttonFontSize} minimum={11} maximum={22} onChange={(value) => update("buttonFontSize", value)} />
             <RangeControl label={t("Corner radius", "圆角")} value={draft.buttonRadius} minimum={0} maximum={32} onChange={(value) => update("buttonRadius", value)} />
             <RangeControl label={t("Border width", "边框宽度")} value={draft.buttonBorderWidth} minimum={0} maximum={6} onChange={(value) => update("buttonBorderWidth", value)} />
-          </fieldset>
-          <fieldset><legend>{t("Learning Path buttons", "学习路径按钮")}</legend>
-            <p className="advanced-control-description">{t("Styles Previous, Next, and Mark lesson complete in the Learning Lab.", "设置学习实验室中上一节、下一节和标记本节已学完按钮的样式。")}</p>
-            <ColorControl label={t("Unfocused background", "未聚焦背景色")} value={draft.learningPathButtonBackground} onChange={(value) => update("learningPathButtonBackground", value)} />
-            <ColorControl label={t("Focused / hovered background", "聚焦／悬停背景色")} value={draft.learningPathButtonFocusBackground} onChange={(value) => update("learningPathButtonFocusBackground", value)} />
-            <ColorControl label={t("Text", "文字颜色")} value={draft.learningPathButtonText} onChange={(value) => update("learningPathButtonText", value)} />
-            <ColorControl label={t("Border", "边框颜色")} value={draft.learningPathButtonBorder} onChange={(value) => update("learningPathButtonBorder", value)} />
-            <RangeControl label={t("Height", "高度")} value={draft.learningPathButtonHeight} minimum={32} maximum={72} onChange={(value) => update("learningPathButtonHeight", value)} />
-            <RangeControl label={t("Font size", "字号")} value={draft.learningPathButtonFontSize} minimum={11} maximum={22} onChange={(value) => update("learningPathButtonFontSize", value)} />
-            <RangeControl label={t("Corner radius", "圆角")} value={draft.learningPathButtonRadius} minimum={0} maximum={32} onChange={(value) => update("learningPathButtonRadius", value)} />
-            <label className="advanced-toggle-control"><Checkbox checked={draft.learningPathButtonShadow} onCheckedChange={(checked) => update("learningPathButtonShadow", checked)} /><span>{t("Button shadow/backdrop", "按钮阴影／背景层")}</span></label>
           </fieldset>
           <fieldset><legend>{t("Text fields and selects", "文本框与下拉框")}</legend>
             <ColorControl label={t("Background", "背景色")} value={draft.fieldBackground} onChange={(value) => update("fieldBackground", value)} />
@@ -395,7 +392,6 @@ export function AdvancedUiSettings({ t }: { t: Translate }) {
               <Button variant="outline" data-ui-role="auth-provider" disabled>{t("Provider disabled", "服务商不可用")}</Button>
             </div>
           </Card>
-          <Card as="section" className="component-preview-card" uiRole="theme-preview"><h3>{t("Learning Path buttons", "学习路径按钮")}</h3><p className="advanced-control-description">{t("Hover over or tab to a button to preview its focused color.", "将鼠标悬停在按钮上，或按 Tab 键聚焦按钮，以预览聚焦颜色。")}</p><div className="component-preview-row"><Button className="learning-path-button" variant="outline" type="button">{t("Previous", "上一节")}</Button><Button className="learning-path-button" variant="outline" type="button">{t("Next", "下一节")}</Button><Button className="learning-path-button" variant="outline" type="button">{t("Mark lesson complete", "标记本节已学完")}</Button></div></Card>
           <Card as="section" className="component-preview-card" uiRole="theme-preview">
             <h3>{t("Form controls", "表单控件")}</h3>
             <div className="component-preview-form">

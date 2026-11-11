@@ -3,7 +3,7 @@ import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 
-const mocks = vi.hoisted(() => ({ enrollments: vi.fn(), course: vi.fn(), courseWelcome: vi.fn(), push: vi.fn(), replace: vi.fn() }));
+const mocks = vi.hoisted(() => ({ enrollments: vi.fn(), course: vi.fn(), courseWelcome: vi.fn(), enroll: vi.fn(), push: vi.fn(), replace: vi.fn() }));
 vi.mock("next/navigation", () => ({ useRouter: () => mocks }));
 vi.mock("../../lib/api", async (original) => ({ ...await original<typeof import("../../lib/api")>(), api: mocks }));
 vi.mock("../../lib/courses", () => ({ activateCourse: vi.fn() }));
@@ -13,13 +13,15 @@ import { ApiError } from "../../lib/api";
 
 let host: HTMLDivElement;
 let root: Root;
-const course = { id: "acceptance", title: "Acceptance course", description: "Course description", requirements: ["Read the lesson"], outcomes: ["Learn the basics"], category: "Test" };
+const course = { id: "acceptance", title: "Acceptance course", description: "Course description", requirements: ["Read the lesson"], outcomes: ["Learn the basics"], category: "Test", level: "Beginner", lessonCount: 3, modules: [{ lessons: [{ id: "a" }, { id: "b" }] }] };
 const emptyWelcome = { overviewAssetId: null, overviewHeading: null, overviewParagraphs: [], howItWorksSteps: null, finalOutcome: null };
 beforeEach(() => {
   vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
   vi.clearAllMocks();
   mocks.enrollments.mockResolvedValue([{ active: true, courseId: course.id }]);
   mocks.course.mockResolvedValue(course);
+  mocks.enroll.mockResolvedValue({ courseId: course.id, active: true });
+  window.history.replaceState(null, "", "/courses/welcome");
   host = document.createElement("div"); document.body.appendChild(host); root = createRoot(host);
 });
 afterEach(async () => { await act(async () => root.unmount()); host.remove(); vi.unstubAllGlobals(); });
@@ -30,9 +32,9 @@ it("renders the server welcome response and lets the learner enter the workspace
   expect(host.textContent).toContain("Published welcome");
   expect(host.textContent).toContain("Published introduction");
   expect(host.textContent).toContain("First step");
-  expect(host.textContent).toContain("Published outcome");
-  await act(async () => [...host.querySelectorAll("button")].find(b => b.textContent === "Next")!.click());
-  await act(async () => [...host.querySelectorAll("button")].find(b => b.textContent === "Let's go")!.click());
+  expect(host.textContent).toContain("2 lessons");
+  await act(async () => [...host.querySelectorAll("button")].find(b => b.textContent === "Start lesson 1")!.click());
+  expect(mocks.enroll).toHaveBeenCalledWith(course.id);
   expect(mocks.push).toHaveBeenCalledWith("/workspace");
 });
 it("uses course metadata for a newly created empty welcome row", async () => {
@@ -67,4 +69,33 @@ it("shows the course picker when there is no active enrollment", async () => {
   await act(async () => root.render(<Page />));
   expect(host.textContent).toContain("No active course");
   expect(mocks.courseWelcome).not.toHaveBeenCalled();
+});
+it("shows the authored welcome for AI Daily Briefing", async () => {
+  mocks.course.mockResolvedValue({ ...course, id: "ai-daily-briefing" });
+  mocks.courseWelcome.mockResolvedValue(emptyWelcome);
+  await act(async () => root.render(<Page />));
+  expect(host.textContent).toContain("Build your own");
+  expect(host.textContent).toContain("All you need is a Google account.");
+  expect(host.textContent).toContain("2 short lessons");
+});
+it("previews a course from ?course= without starting it until Start lesson 1", async () => {
+  window.history.replaceState(null, "", "/courses/welcome?course=acceptance");
+  mocks.courseWelcome.mockResolvedValue(emptyWelcome);
+  await act(async () => root.render(<Page />));
+  expect(mocks.enrollments).not.toHaveBeenCalled();
+  expect(mocks.course).toHaveBeenCalledWith("acceptance");
+  await act(async () => (host.querySelector('[aria-label="Leave course welcome"]') as HTMLButtonElement).click());
+  expect(mocks.replace).toHaveBeenCalledWith("/courses");
+  expect(mocks.enroll).not.toHaveBeenCalled();
+  await act(async () => [...host.querySelectorAll("button")].find(b => b.textContent === "Start lesson 1")!.click());
+  expect(mocks.enroll).toHaveBeenCalledWith("acceptance");
+  expect(mocks.push).toHaveBeenCalledWith("/workspace");
+});
+it("stays on the welcome page and explains when starting fails", async () => {
+  mocks.courseWelcome.mockResolvedValue(emptyWelcome);
+  mocks.enroll.mockRejectedValue(new ApiError(503, "Service unavailable"));
+  await act(async () => root.render(<Page />));
+  await act(async () => [...host.querySelectorAll("button")].find(b => b.textContent === "Start lesson 1")!.click());
+  expect(mocks.push).not.toHaveBeenCalled();
+  expect(host.querySelector('[role="alert"]')?.textContent).toBe("Service unavailable");
 });
