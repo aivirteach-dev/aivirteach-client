@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, type RefObject } from "react";
+import type { CopyToVm } from "../components/lesson-blocks/copy-code";
 
 const themeStyleId = "aivirteach-site-theme";
 
@@ -72,12 +73,51 @@ function applyTheme(frame: HTMLIFrameElement | null) {
   doc.body?.appendChild(style);
 }
 
+const vmMark = " + VM";
+
+// After the page shows its own "Copied" button label and message, note that the VM has it too.
+function markVmCopy(doc: Document) {
+  const toast = doc.getElementById("toast");
+  if (toast?.textContent && !toast.textContent.endsWith(vmMark)) toast.textContent += vmMark;
+  doc.querySelectorAll<HTMLElement>(".is-copied").forEach((button) => {
+    if (!button.textContent?.endsWith(vmMark)) button.textContent += vmMark;
+  });
+}
+
+type VmCopyWindow = Window & { __aivirteachVmCopy?: true };
+
+/**
+ * Every copy on the page goes through navigator.clipboard.writeText (or its own fallback
+ * when that fails), so wrapping it sends the same text to the VM's clipboard first.
+ */
+export function connectVmCopy(win: VmCopyWindow | null, copyToVm: RefObject<CopyToVm | undefined>) {
+  if (!win || win.__aivirteachVmCopy) return;
+  win.__aivirteachVmCopy = true;
+  const clipboard = win.navigator.clipboard as Clipboard | undefined;
+  const original = clipboard?.writeText ? clipboard.writeText.bind(clipboard) : null;
+  async function writeText(text: string) {
+    let vmCopied = false;
+    try { vmCopied = copyToVm.current?.(text) ?? false; } catch { /* the page still copies locally */ }
+    try {
+      if (!original) throw new Error("Clipboard unavailable");
+      await original(text);
+    } finally {
+      // Runs after the page has updated its button and message, whether or not it fell back.
+      if (vmCopied) win!.setTimeout(() => markVmCopy(win!.document), 0);
+    }
+  }
+  if (clipboard) Object.defineProperty(clipboard, "writeText", { configurable: true, value: writeText });
+  else Object.defineProperty(win.navigator, "clipboard", { configurable: true, value: { writeText } });
+}
+
 /**
  * A tutorial page shown as-is in the Learning Path, recoloured to the site theme.
- * Reports the section the learner opens (the page's own lesson ids).
+ * Reports the section the learner opens (the page's own lesson ids), and also copies code to the VM.
  */
-export function EmbeddedCoursePage({ src, title, onSectionChange }: { src: string; title: string; onSectionChange: (sectionId: string) => void }) {
+export function EmbeddedCoursePage({ src, title, copyToVm, onSectionChange }: { src: string; title: string; copyToVm?: CopyToVm; onSectionChange: (sectionId: string) => void }) {
   const frameRef = useRef<HTMLIFrameElement>(null);
+  const copyToVmRef = useRef(copyToVm);
+  useEffect(() => { copyToVmRef.current = copyToVm; }, [copyToVm]);
   const onSectionChangeRef = useRef(onSectionChange);
   useEffect(() => { onSectionChangeRef.current = onSectionChange; }, [onSectionChange]);
 
@@ -94,6 +134,7 @@ export function EmbeddedCoursePage({ src, title, onSectionChange }: { src: strin
     let sectionObserver: MutationObserver | null = null;
     function connect() {
       applyTheme(frame);
+      connectVmCopy(frame?.contentWindow ?? null, copyToVmRef);
       sectionObserver?.disconnect();
       const content = frame?.contentDocument?.getElementById("lessonContent");
       if (!content) return;

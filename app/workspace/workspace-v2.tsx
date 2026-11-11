@@ -529,7 +529,7 @@ export function WorkspaceV2() {
           <div className="lab-v2-path" role="tabpanel">
             {error && <Alert variant="destructive">{error}</Alert>}
             {embeddedPage
-              ? <EmbeddedCoursePage key={embeddedPage} src={embeddedPage} title={course.title} onSectionChange={followEmbeddedSection} />
+              ? <EmbeddedCoursePage key={embeddedPage} src={embeddedPage} title={course.title} copyToVm={copyLessonCodeToVm} onSectionChange={followEmbeddedSection} />
               : <CourseLearningPath key={course.id} course={course} copyToVm={copyLessonCodeToVm} session={learningSession} />}
           </div>
         )}
