@@ -7,6 +7,8 @@ import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Sidebar } from "../components/Sidebar";
 import { useCourseOutline } from "../hooks/useCourseOutline";
+import { useLearningHome } from "../hooks/useLearningHome";
+import { NoActiveCourse } from "./NoActiveCourse";
 import { useLearnerProfile } from "../hooks/useLearnerProfile";
 import { activateCourse } from "../lib/courses";
 import { localize, useLearningLanguage } from "../lib/language";
@@ -14,23 +16,51 @@ import { localize, useLearningLanguage } from "../lib/language";
 const stateMark = { done: "✓", current: "▶", todo: "" } as const;
 
 export default function DashboardPage() {
-  const { profile, loading, error, recordPractice } = useLearnerProfile();
-  const outline = useCourseOutline(profile, !loading);
+  const { profile, loading, error } = useLearnerProfile();
+  const home = useLearningHome(!loading);
+  const outline = useCourseOutline(profile, !loading && home.status === "active");
   const language = useLearningLanguage();
   const t = (english: string, chinese: string) => localize(language, english, chinese);
-  const goal = Math.min(100, Math.max(0, profile.stats.weeklyGoalPercent));
   const current = outline?.current ?? null;
   const allDone = outline ? outline.total > 0 && outline.completed === outline.total : false;
   const lessonHref = outline?.course.localOnly ? "/courses/python-basics" : "/workspace";
   const percent = outline && outline.total ? Math.round((outline.completed / outline.total) * 100) : profile.course.progress;
-  const resume = () => { if (outline && !allDone) { activateCourse(outline.course.id); void recordPractice(15); } };
+  const resume = () => { if (outline && !allDone) activateCourse(outline.course.id); };
+
+  // Shared by the course view and the no-course view.
+  const stats = (
+    <div className="learn-b2-stats">
+      <Card as="article" className="stat-card" uiRole="dashboard-stat" data-ui-tone="streak"><div><strong>{t(`${profile.stats.streakDays} Days`, `${profile.stats.streakDays} 天`)}</strong><span>{t("Current Streak", "连续学习")}</span></div></Card>
+      <Card as="article" className="stat-card" uiRole="dashboard-stat" data-ui-tone="skills"><div><strong>{Math.round(profile.stats.practiceMinutes / 60)}h</strong><span>{t("Practice Time", "练习时间")}</span></div></Card>
+      <Card as="article" className="stat-card" uiRole="dashboard-stat"><div><strong>{profile.stats.skillsMastered}</strong><span>{t("Skills Mastered", "已掌握技能")}</span></div></Card>
+    </div>
+  );
+  const activity = profile.recentActivity.length > 0 ? (
+    <section id="activity" className="learn-b2-section" aria-labelledby="learn-b2-activity">
+      <h2 id="learn-b2-activity" className="learn-b2-section-title">{t("Activity", "动态")}</h2>
+      <Card as="div" className="learn-b-activity">
+        <ul>
+          {profile.recentActivity.map((activity) => (
+            <li key={activity.id}><strong>{activity.title}</strong><span>{activity.detail}</span><time>{activity.occurredAt}</time></li>
+          ))}
+        </ul>
+      </Card>
+    </section>
+  ) : null;
+  const hasHistory = profile.stats.streakDays > 0 || profile.stats.practiceMinutes > 0 || profile.stats.tasksCompleted > 0 || profile.stats.skillsMastered > 0;
 
   return (
     <div className="app-shell dashboard-shell">
       <Sidebar active="dashboard" />
       <main className={`dashboard learn-b2 page-content ${loading ? "data-loading" : ""}`}>
         {error && <Alert className="auth-error" variant="destructive">Backend unavailable: {error}</Alert>}
-        <div className="learn-b2-main">
+        {home.status === "none" ? <div className="learn-b2-main">
+          <NoActiveCourse firstName={profile.name.split(" ")[0] || profile.name} paused={home.paused} completed={home.completed} newCourses={home.newCourses} t={t} />
+          {hasHistory && <section className="learn-b2-section" aria-label={t("Your progress", "你的进度")}>{stats}</section>}
+          {activity}
+        </div> : home.status === "loading" ? <div className="learn-b2-main">
+          <p className="learn-b2-loading" role="status">{t("Loading your learning...", "正在加载你的学习内容……")}</p>
+        </div> : <div className="learn-b2-main">
           <header className="learn-b2-course-head">
             <div><span className="learn-b-eyebrow">{outline?.course.category ?? profile.course.category}</span><strong>{outline?.course.title ?? profile.course.title}</strong></div>
             <Link className="learn-b-link" href="/courses">{t("Change course", "更换课程")} →</Link>
@@ -51,12 +81,7 @@ export default function DashboardPage() {
                 </Button>
               </div>
             </Card>
-            <div className="learn-b2-stats">
-              <Card as="article" className="stat-card" uiRole="dashboard-stat" data-ui-tone="streak"><div><strong>{t(`${profile.stats.streakDays} Days`, `${profile.stats.streakDays} 天`)}</strong><span>{t("Current Streak", "连续学习")}</span></div></Card>
-              <Card as="article" className="stat-card" uiRole="dashboard-stat" data-ui-tone="practice"><div><strong>{goal}%</strong><span>{t("Weekly goal", "每周目标")}</span></div></Card>
-              <Card as="article" className="stat-card" uiRole="dashboard-stat" data-ui-tone="skills"><div><strong>{Math.round(profile.stats.practiceMinutes / 60)}h</strong><span>{t("Practice Time", "练习时间")}</span></div></Card>
-              <Card as="article" className="stat-card" uiRole="dashboard-stat"><div><strong>{profile.stats.skillsMastered}</strong><span>{t("Skills Mastered", "已掌握技能")}</span></div></Card>
-            </div>
+            {stats}
           </section>
 
           <section id="modules" className="learn-b2-section" aria-labelledby="learn-b2-modules">
@@ -92,19 +117,8 @@ export default function DashboardPage() {
             ) : <p className="learn-b2-loading" role="status">{t("Loading modules…", "正在加载单元……")}</p>}
           </section>
 
-          {profile.recentActivity.length > 0 && (
-            <section id="activity" className="learn-b2-section" aria-labelledby="learn-b2-activity">
-              <h2 id="learn-b2-activity" className="learn-b2-section-title">{t("Activity", "动态")}</h2>
-              <Card as="div" className="learn-b-activity">
-                <ul>
-                  {profile.recentActivity.map((activity) => (
-                    <li key={activity.id}><strong>{activity.title}</strong><span>{activity.detail}</span><time>{activity.occurredAt}</time></li>
-                  ))}
-                </ul>
-              </Card>
-            </section>
-          )}
-        </div>
+          {activity}
+        </div>}
       </main>
     </div>
   );

@@ -154,11 +154,6 @@ export function useLearnerProfile() {
     await refresh();
   }, [refresh]);
 
-  const recordPractice = useCallback(async (minutes = 15) => {
-    await api.recordPractice(minutes);
-    await refresh();
-  }, [refresh]);
-
   const resetProfile = useCallback(async () => {
     await api.resetProfile();
     await refresh();
@@ -169,5 +164,5 @@ export function useLearnerProfile() {
     await refresh();
   }, [refresh]);
 
-  return { profile, loading, error, refresh, updateIdentity, createAccount, selectDemoProfile, recordPractice, resetProfile, markNotificationsRead };
+  return { profile, loading, error, refresh, updateIdentity, createAccount, selectDemoProfile, resetProfile, markNotificationsRead };
 }

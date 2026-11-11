@@ -1,3 +1,5 @@
+import { embeddedCourseStorageKeys } from "./embedded-course";
+
 export type DemoCourse = {
   id: string;
   title: string;
@@ -61,6 +63,7 @@ export function clearActiveCourse(courseId?: string) {
 export function clearCourseProgressCache(courseId: string) {
   window.localStorage.removeItem(`aivirteach.course.lesson.${courseId}`);
   window.localStorage.removeItem(`aivirteach.lab.activeSeconds.${courseId}`);
+  for (const key of embeddedCourseStorageKeys(courseId)) window.localStorage.removeItem(key);
 }
 
 export function readActiveCourse() {

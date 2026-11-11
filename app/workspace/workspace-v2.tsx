@@ -23,6 +23,9 @@ import { reduceTutorTools, type TutorTool } from "./tutor-tools";
 import { vmPanelState } from "./vm-panel-state";
 import { hasTutorVersionMismatch, loadedTutorContext, tutorContextKey } from "./tutor-context";
 import { useCourseLearningSession } from "./use-course-learning-session";
+import { usePracticeTimer } from "./practice-time";
+import { EmbeddedCoursePage } from "./EmbeddedCoursePage";
+import { embeddedCoursePage, serverLessonForSection } from "../lib/embedded-course";
 import { useChatMessages } from "./use-chat-messages";
 import { readTutorStream, TutorReplyNotSavedError } from "./read-tutor-stream";
 import { initialTutorReply, replyDraft, type TutorReplyState } from "./tutor-reply-state";
@@ -120,6 +123,15 @@ export function WorkspaceV2() {
   const floatingPosition = draggedFloatingPosition ?? savedFloatingPosition;
   const hideFloatingForTeacher = teacherPanelInViewport ?? (activeTab === "teacher" && layout !== "minimized");
   const learningSession = useCourseLearningSession(course);
+  usePracticeTimer(course?.id, workspace?.status === "RUNNING");
+  // AI Daily Briefing temporarily shows its tutorial page instead of the server's lessons.
+  const embeddedPage = embeddedCoursePage(course?.id, learningLanguage);
+  const { selectedId: selectedLessonId, select: selectLesson } = learningSession;
+  const followEmbeddedSection = useCallback((sectionId: string) => {
+    // Keep the tutor on the server lesson that matches the open section.
+    const lessonId = course ? serverLessonForSection(course, sectionId) : null;
+    if (lessonId && lessonId !== selectedLessonId) selectLesson(lessonId);
+  }, [course, selectedLessonId, selectLesson]);
 
   useEffect(() => {
     if (activeTab !== "teacher" || layout === "minimized") return;
@@ -516,7 +528,9 @@ export function WorkspaceV2() {
         ) : (
           <div className="lab-v2-path" role="tabpanel">
             {error && <Alert variant="destructive">{error}</Alert>}
-            <CourseLearningPath key={course.id} course={course} copyToVm={copyLessonCodeToVm} session={learningSession} />
+            {embeddedPage
+              ? <EmbeddedCoursePage key={embeddedPage} src={embeddedPage} title={course.title} onSectionChange={followEmbeddedSection} />
+              : <CourseLearningPath key={course.id} course={course} copyToVm={copyLessonCodeToVm} session={learningSession} />}
           </div>
         )}
       </section>

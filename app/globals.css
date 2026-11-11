@@ -2778,6 +2778,7 @@ html[data-interface-version="neubrutal"] .lab-v2-tabs [data-slot="button"][aria-
 .lab-v2-shell.is-resizing .lab-v2-resizer::after { background: var(--primary); }
 
 .lab-v2-path, .lab-v2-teacher { min-height: 0; flex: 1; display: flex; flex-direction: column; }
+.lab-v2-embedded-course { width: 100%; min-height: 0; flex: 1; display: block; border: 0; background: var(--surface); }
 .lab-v2-course-frame { width: 100%; min-height: 0; flex: 1; border: 0; background: #fff; }
 .lab-v2-path-empty { flex: 1; display: grid; place-content: center; padding: 30px; text-align: center; }
 .lab-v2-path-empty h2 { margin: 0; }

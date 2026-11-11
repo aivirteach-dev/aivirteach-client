@@ -21,7 +21,6 @@ export type DemoLearner = {
     tasksCompleted: number;
     last30TasksCompleted: number;
     skillsMastered: number;
-    weeklyGoalPercent: number;
   };
   course: {
     category: string;
@@ -37,7 +36,6 @@ export type DemoLearner = {
   analytics: {
     practiceTrend: number;
     taskTrend: number;
-    goalTrend: number;
     insight: string;
     insightDetail: string;
   };
@@ -61,7 +59,6 @@ export const beginnerLearner: DemoLearner = {
     tasksCompleted: 9,
     last30TasksCompleted: 9,
     skillsMastered: 1,
-    weeklyGoalPercent: 58,
   },
   course: {
     category: "Generative AI",
@@ -93,7 +90,6 @@ export const beginnerLearner: DemoLearner = {
   analytics: {
     practiceTrend: 18,
     taskTrend: 13,
-    goalTrend: 8,
     insight: "You learn most consistently in short evening sessions. Another 25 minutes will complete this week's goal.",
     insightDetail: "Your strongest sessions were Tuesday and Saturday, with the best task completion rate in sessions under 30 minutes.",
   },
@@ -117,7 +113,6 @@ export const advancedLearner: DemoLearner = {
     tasksCompleted: 187,
     last30TasksCompleted: 44,
     skillsMastered: 8,
-    weeklyGoalPercent: 86,
   },
   course: {
     category: "n8n",
@@ -150,7 +145,6 @@ export const advancedLearner: DemoLearner = {
   analytics: {
     practiceTrend: 9,
     taskTrend: 11,
-    goalTrend: 6,
     insight: "Your debugging sessions are becoming more efficient, and you are on track to finish this module by Friday.",
     insightDetail: "Deployment exercises now take 12 minutes less on average than they did at the start of the month.",
   },
@@ -174,7 +168,6 @@ export const allClearLearner: DemoLearner = {
     tasksCompleted: 436,
     last30TasksCompleted: 18,
     skillsMastered: 18,
-    weeklyGoalPercent: 100,
   },
   course: {
     category: "AI Capstone",
@@ -206,7 +199,6 @@ export const allClearLearner: DemoLearner = {
   analytics: {
     practiceTrend: 4,
     taskTrend: 0,
-    goalTrend: 0,
     insight: "All available learning goals are complete. Your current study pattern is ideal for maintaining mastery.",
     insightDetail: "This week you revisited integrations, monitoring, and deployment without any overdue learning goals.",
   },
