@@ -4,6 +4,7 @@ import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { api, type ApiCourseDetail, type ApiEnrollment, type ApiLearningProgress, type ApiLesson } from "../lib/api";
 import { WorkspaceV2 } from "./workspace-v2";
+import { markLabTourSeen } from "./lab-tour-steps";
 
 const mocks = vi.hoisted(() => ({ session: vi.fn() }));
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn(), replace: vi.fn() }) }));
@@ -58,6 +59,8 @@ describe("V2 tutor stream wiring", () => {
   let root: Root;
 
   beforeEach(async () => {
+    // These tests cover the tutor chat; keep the first-visit tour from switching tabs.
+    markLabTourSeen();
     vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
     vi.stubGlobal("crypto", { randomUUID: () => "request-1" });
     Object.defineProperty(HTMLElement.prototype, "scrollTo", { configurable: true, value: vi.fn() });

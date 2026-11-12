@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { type CSSProperties, type FormEvent, type KeyboardEvent, type PointerEvent as ReactPointerEvent, useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
-import { Maximize2, Minimize2, Send, Wifi, WifiOff } from "lucide-react";
+import { CircleHelp, Maximize2, Minimize2, Send, Wifi, WifiOff } from "lucide-react";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -25,6 +25,8 @@ import { hasTutorVersionMismatch, loadedTutorContext, tutorContextKey } from "./
 import { useCourseLearningSession } from "./use-course-learning-session";
 import { usePracticeTimer } from "./practice-time";
 import { EmbeddedCoursePage } from "./EmbeddedCoursePage";
+import { LabTour } from "./LabTour";
+import { hasSeenLabTour, labTourSteps, markLabTourSeen } from "./lab-tour-steps";
 import { embeddedCoursePage, serverLessonForSection } from "../lib/embedded-course";
 import { useChatMessages } from "./use-chat-messages";
 import { readTutorStream, TutorReplyNotSavedError } from "./read-tutor-stream";
@@ -483,6 +485,26 @@ export function WorkspaceV2() {
     return consoleViewerRef.current?.writeClipboard(text) ?? false;
   }, []);
 
+  // Guided tour: starts on a learner's first visit, and again from the ? button.
+  const [tourOpen, setTourOpen] = useState(false);
+  const [tourIndex, setTourIndex] = useState(0);
+  const startTour = useCallback(() => {
+    setActiveTab("path");
+    setLayout("split");
+    setTourIndex(0);
+    setTourOpen(true);
+  }, []);
+  const closeTour = useCallback(() => {
+    markLabTourSeen();
+    setTourOpen(false);
+  }, []);
+  const labReady = checked && !!course && !!enrollment;
+  useEffect(() => {
+    if (!labReady || hasSeenLabTour()) return;
+    const timer = window.setTimeout(startTour, 600);
+    return () => window.clearTimeout(timer);
+  }, [labReady, startTour]);
+
   if (!checked || !course || !enrollment) {
     return <main className="lab-v2-gate" role="status"><BrandLogo /><h1>{checked ? t("Choose a course first", "请先选择课程") : t("Opening Learning Lab V2...", "正在打开学习实验室 V2……")}</h1><p>{error || (checked ? t("Choose a course before opening its workspace.", "请先选择课程，再打开其工作区。") : t("Loading your course.", "正在加载课程。"))}</p>{checked && <Button type="button" onClick={() => router.replace("/courses")}>{t("Browse courses", "浏览课程")}</Button>}</main>;
   }
@@ -502,6 +524,7 @@ export function WorkspaceV2() {
             <Button variant="ghost" type="button" role="tab" aria-selected={activeTab === "path"} onClick={() => setActiveTab("path")}>{t("Learning Path", "学习路径")}</Button>
           </div>
           <div className="lab-v2-window-actions">
+            <Button className="lab-v2-tour-button" variant="ghost" size="icon" type="button" onClick={startTour} aria-label={t("Take the Learning Lab tour", "查看学习实验室导览")} title={t("Take the Learning Lab tour", "查看学习实验室导览")}><CircleHelp aria-hidden="true" /></Button>
             <Button className="lab-v2-minimize" variant="ghost" size="icon" type="button" onClick={() => setLayout("minimized")} aria-label={t("Minimize learning panel", "收起学习面板")} title={t("Minimize learning panel", "收起学习面板")}><span aria-hidden="true">&lt;</span></Button>
             <Button className="lab-v2-expand" variant="ghost" size="icon" type="button" onClick={() => setLayout((current) => current === "maximized" ? "split" : "maximized")} aria-label={layout === "maximized" ? t("Restore split workspace", "恢复分屏工作区") : t("Maximize learning workspace", "最大化学习工作区")} aria-pressed={layout === "maximized"} title={layout === "maximized" ? t("Restore split workspace", "恢复分屏工作区") : t("Maximize learning workspace", "最大化学习工作区")}>
               {layout === "maximized" ? <Minimize2 aria-hidden="true" /> : <Maximize2 aria-hidden="true" />}
@@ -540,7 +563,7 @@ export function WorkspaceV2() {
       <main className="lab-v2-vm vm-workspace">
         {layout === "minimized" && <Button className="lab-v2-restore" variant="outline" size="icon" type="button" onClick={() => setLayout("split")} aria-label={t("Restore learning panel", "恢复学习面板")} title={t("Restore learning panel", "恢复学习面板")}><span aria-hidden="true">&gt;</span></Button>}
         <header className="vm-toolbar"><div><span className="vm-status-dot" aria-hidden="true" /><strong>{t("Learning VM", "学习虚拟机")}</strong></div><div className="lab-v2-vm-status"><small>{workspace?.status === "RUNNING" && consoleSession ? t("Connected workspace", "工作区已连接") : t("Awaiting connection", "等待连接")}</small><span className={`lab-v2-latency ${latency === null ? "is-offline" : ""}`} role="img" aria-label={latency === null ? t("Server connection unavailable", "服务器连接不可用") : t(`Server latency ${latency} milliseconds`, `服务器延迟 ${latency} 毫秒`)} title={latency === null ? t("Server connection unavailable", "服务器连接不可用") : `${latency} ms`}>{latency === null ? <WifiOff aria-hidden="true" /> : <Wifi aria-hidden="true" />}</span>{workspace?.status === "RUNNING" && <Button type="button" variant="destructive" size="xs" className="vm-close-button" onClick={closeEnvironment} disabled={stopping}>{stopping ? t("Closing...", "正在关闭……") : t("Close environment", "关闭环境")}</Button>}</div></header>
-        {panel === "console" && consoleSession?.data ? <ConsoleViewer ref={consoleViewerRef} data={consoleSession.data} labId={consoleSession.labId} enrollmentId={enrollment.id} onError={handleConsoleError} /> : panel === "start-console" ? <section className="vm-empty-state" role="status"><span className="vm-display-icon" aria-hidden="true" /><h2>Learning VM</h2>{consoleError && <Alert className="auth-error" variant="destructive">{consoleError}</Alert>}<Button size="lg" type="button" onClick={() => void startConsoleSession()} disabled={consoleLoading || stopping}>{consoleLoading ? "Starting..." : "Start remote desktop"}</Button></section> : panel === "stopped" ? <section className="vm-empty-state" role="status"><span className="vm-display-icon" aria-hidden="true" /><h2>Learning VM</h2><p>Your Learning VM is closed. Resume it to keep working.</p>{resumeError && <Alert className="auth-error" variant="destructive">{resumeError}</Alert>}<Button size="lg" type="button" onClick={resumeWorkspace} disabled={resuming}>{resuming ? "Resuming..." : "Resume learning environment"}</Button></section> : panel === "error" ? <section className="vm-empty-state" role="status"><span className="vm-display-icon" aria-hidden="true" /><h2>Learning VM</h2><p>{workspace?.errorMessage || "Could not start your Learning VM."}</p><Button size="lg" type="button" onClick={retryWorkspace} disabled={retrying}>{retrying ? "Retrying..." : "Retry"}</Button></section> : <section className="vm-empty-state" role="status"><span className="vm-display-icon" aria-hidden="true" /><h2>Learning VM</h2><p>{workspace?.status === "RESETTING" ? t("Clearing the previous Learning VM. This can take a few minutes.", "正在清理之前的学习虚拟机，可能需要几分钟。") : t("Preparing your Learning VM. This can take a few minutes.", "正在准备学习虚拟机，可能需要几分钟。")}</p></section>}
+        {panel === "console" && consoleSession?.data ? <ConsoleViewer ref={consoleViewerRef} data={consoleSession.data} labId={consoleSession.labId} enrollmentId={enrollment.id} onError={handleConsoleError} /> : panel === "start-console" ? <section className="vm-empty-state" role="status"><span className="vm-display-icon" aria-hidden="true" /><h2>Learning VM</h2>{consoleError && <Alert className="auth-error" variant="destructive">{consoleError}</Alert>}<Button className="vm-start-desktop" size="lg" type="button" onClick={() => void startConsoleSession()} disabled={consoleLoading || stopping}>{consoleLoading ? "Starting..." : "Start remote desktop"}</Button></section> : panel === "stopped" ? <section className="vm-empty-state" role="status"><span className="vm-display-icon" aria-hidden="true" /><h2>Learning VM</h2><p>Your Learning VM is closed. Resume it to keep working.</p>{resumeError && <Alert className="auth-error" variant="destructive">{resumeError}</Alert>}<Button size="lg" type="button" onClick={resumeWorkspace} disabled={resuming}>{resuming ? "Resuming..." : "Resume learning environment"}</Button></section> : panel === "error" ? <section className="vm-empty-state" role="status"><span className="vm-display-icon" aria-hidden="true" /><h2>Learning VM</h2><p>{workspace?.errorMessage || "Could not start your Learning VM."}</p><Button size="lg" type="button" onClick={retryWorkspace} disabled={retrying}>{retrying ? "Retrying..." : "Retry"}</Button></section> : <section className="vm-empty-state" role="status"><span className="vm-display-icon" aria-hidden="true" /><h2>Learning VM</h2><p>{workspace?.status === "RESETTING" ? t("Clearing the previous Learning VM. This can take a few minutes.", "正在清理之前的学习虚拟机，可能需要几分钟。") : t("Preparing your Learning VM. This can take a few minutes.", "正在准备学习虚拟机，可能需要几分钟。")}</p></section>}
       </main>
 
       <Dialog open={exitDialogOpen} onOpenChange={setExitDialogOpen}>
@@ -570,6 +593,20 @@ export function WorkspaceV2() {
           {floatingUnread && <span className="floating-ai-notification" aria-hidden="true" />}
         </button>
       </div>
+
+      {tourOpen && <LabTour
+        steps={labTourSteps(t, { activeTab, vm: panel, desktopStarted: consoleLoading || panel === "console" })}
+        index={tourIndex}
+        onIndexChange={setTourIndex}
+        onClose={closeTour}
+        labels={{
+          step: (current, total) => t(`Step ${current} of ${total}`, `第 ${current} 步，共 ${total} 步`),
+          back: t("Back", "上一步"),
+          next: t("Next", "下一步"),
+          skip: t("Skip tour", "跳过导览"),
+          finish: t("Done", "完成"),
+        }}
+      />}
     </div>
   );
 }
