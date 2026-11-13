@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { Eye, EyeOff } from "lucide-react";
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Alert } from "@/components/ui/alert";
@@ -12,10 +12,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { BrandLogo } from "../components/BrandLogo";
 import { ThemeToggle } from "../components/ThemeToggle";
-import { api } from "../lib/api";
+import { api, hasAuthSession } from "../lib/api";
 import { backendConfig } from "../lib/config";
 import { mockLearners } from "../lib/mock-profile";
 import { localize, useLearningLanguage } from "../lib/language";
+import { hasResumableSession } from "./resume-session";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -28,6 +29,15 @@ export default function LoginPage() {
   const selectedProfile = mockLearners.find((learner) => learner.id === selectedProfileId) ?? mockLearners[1];
   const language = useLearningLanguage();
   const t = (english: string, chinese: string) => localize(language, english, chinese);
+
+  // Still signed in (e.g. with "Remember me")? Skip the form and go to the dashboard.
+  useEffect(() => {
+    let cancelled = false;
+    void hasResumableSession({ isLocal, hasSession: hasAuthSession, me: api.me }).then((signedIn) => {
+      if (signedIn && !cancelled) router.replace("/dashboard");
+    });
+    return () => { cancelled = true; };
+  }, [isLocal, router]);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();

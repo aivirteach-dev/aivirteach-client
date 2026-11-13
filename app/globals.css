@@ -196,6 +196,8 @@ html[data-scrollbars="hidden"] *::-webkit-scrollbar {
 .password-toggle svg { width: 20px; height: 20px; }
 .login-card .auth-text-link[data-slot="button"] { width: auto; min-height: 0; border: 0; padding: 0; background: transparent; color: var(--primary); box-shadow: none; transform: none; }
 .login-card .auth-text-link[data-slot="button"]:hover { background: transparent; color: var(--primary); box-shadow: none; transform: none; }
+/* Keyboard focus: a plain border only, without the theme's blue button fill. */
+.login-card .auth-text-link.auth-text-link[data-slot="button"]:focus-visible { border-radius: 4px; background: transparent !important; color: var(--primary) !important; box-shadow: none !important; outline: 2px solid var(--ink) !important; outline-offset: 3px !important; }
 .auth-spaced-label { margin-top: 18px; }
 .remember { display: flex; align-items: center; gap: 9px; margin: 24px 0 28px !important; font-weight: 400 !important; }
 .remember [data-slot="checkbox"] { border: 2px solid #111; background: #fff; }
@@ -2774,7 +2776,7 @@ html[data-interface-version="neubrutal"] .lab-v2-tabs [data-slot="button"][aria-
 .lab-v2-resizer:hover::after, .lab-v2-resizer:focus-visible::after { background: var(--primary); }
 .lab-v2-resizer:focus-visible { outline: 0; }
 .lab-v2-shell.is-resizing { cursor: col-resize; }
-.lab-v2-shell.is-resizing :is(.lab-v2-left, .lab-v2-vm) { pointer-events: none; }
+.lab-v2-resize-shield { position: fixed; inset: 0; z-index: 2147483647; cursor: col-resize; }
 .lab-v2-shell.is-resizing .lab-v2-resizer::after { background: var(--primary); }
 
 .lab-v2-path, .lab-v2-teacher { min-height: 0; flex: 1; display: flex; flex-direction: column; }
@@ -2800,28 +2802,31 @@ html[data-interface-version="neubrutal"] .lab-v2-tabs [data-slot="button"][aria-
 
 .floating-ai { position: fixed; z-index: 40; width: 64px; height: 64px; touch-action: none; }
 
-/* Learning Lab tour: a grey layer with a hole around the current target, and a popover beside it. */
-.lab-tour { position: fixed; inset: 0; z-index: 1000; pointer-events: none; }
-.lab-tour-layer { position: absolute; inset: 0; display: block; overflow: visible; }
-.lab-tour-shade { fill: rgb(10 14 22 / .58); pointer-events: auto; }
-html[data-theme="dark"] .lab-tour-shade { fill: rgb(0 0 0 / .68); }
-.lab-tour-ring { fill: none; stroke: var(--primary); stroke-width: 3; pointer-events: none; animation: lab-tour-pulse 1.8s ease-in-out infinite; }
-.lab-tour-block { fill: transparent; pointer-events: all; }
-@keyframes lab-tour-pulse { 50% { stroke-opacity: .45; } }
-.lab-tour-popover { position: absolute; width: min(340px, calc(100vw - 24px)); padding: 16px 18px 14px; border: 1px solid var(--outline); border-radius: 14px; background: var(--surface-lowest); color: var(--ink); box-shadow: 0 18px 50px rgb(0 0 0 / .28); pointer-events: auto; outline: none; transition: left .2s ease, top .2s ease; }
-html[data-interface-version="neubrutal"] .lab-tour-popover { border: 3px solid var(--ink); border-radius: 0; box-shadow: 5px 5px 0 var(--ink); }
-.lab-tour-count { margin: 0 0 6px; color: var(--primary); font-size: 11px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; }
-.lab-tour-popover h2 { margin: 0 0 6px; color: var(--ink); font-size: 18px; line-height: 1.25; }
-.lab-tour-popover > p { margin: 0; color: var(--ink-soft); font-size: 14px; line-height: 1.5; }
-.lab-tour-popover > .lab-tour-count { color: var(--primary); }
-.lab-tour-popover > .lab-tour-action { display: flex; align-items: center; gap: 8px; margin-top: 10px; color: var(--ink); font-weight: 700; }
-.lab-tour-action::before { content: ""; width: 8px; height: 8px; flex: none; border-radius: 50%; background: var(--primary); animation: lab-tour-pulse-dot 1.4s ease-in-out infinite; }
+/* Learning Lab tour (driver.js): the popover follows the site theme in both styles, light and dark. */
+.driver-popover.lab-tour-popover { min-width: 280px; max-width: 360px; padding: 18px 18px 14px; border: 1px solid var(--outline); border-radius: 14px; background: var(--surface-lowest); color: var(--ink); font-family: inherit; box-shadow: 0 18px 50px rgb(0 0 0 / .28); }
+html[data-interface-version="neubrutal"] .driver-popover.lab-tour-popover { border: 3px solid var(--ink); border-radius: 0; box-shadow: 5px 5px 0 var(--ink); }
+.lab-tour-popover .driver-popover-title { padding-right: 24px; color: var(--ink); font: inherit; font-size: 18px; font-weight: 700; line-height: 1.25; }
+.lab-tour-popover .driver-popover-description { color: var(--ink-soft); font: inherit; font-size: 14px; line-height: 1.5; }
+.lab-tour-popover .lab-tour-action { display: flex; align-items: center; gap: 8px; margin-top: 10px; color: var(--ink); font-weight: 700; }
+.lab-tour-popover .lab-tour-action::before { content: ""; width: 8px; height: 8px; flex: none; border-radius: 50%; background: var(--primary); animation: lab-tour-pulse-dot 1.4s ease-in-out infinite; }
 @keyframes lab-tour-pulse-dot { 50% { opacity: .3; } }
-.lab-tour-actions { display: flex; align-items: center; gap: 8px; margin-top: 14px; }
-.lab-tour-actions > span { flex: 1; }
-/* Back and Next match: the theme editor's button size otherwise applies only to the primary (Next) button. */
-html .lab-tour .lab-tour-actions [data-slot="button"]:is([data-variant="default"], [data-variant="outline"]) { min-width: 80px; height: 36px; min-height: 36px !important; padding-inline: 16px; font-size: 14px !important; }
-html .lab-tour .lab-tour-actions [data-slot="button"][data-variant="ghost"] { height: 36px; font-size: 14px; }
+.lab-tour-popover .driver-popover-close-btn { top: 8px; right: 8px; width: 28px; height: 28px; border-radius: 6px; color: var(--ink-soft); font-size: 20px; }
+.lab-tour-popover .driver-popover-close-btn:hover, .lab-tour-popover .driver-popover-close-btn:focus-visible { background: var(--surface-container); color: var(--ink); }
+.lab-tour-popover .driver-popover-footer { margin-top: 16px; gap: 8px; }
+.lab-tour-popover .driver-popover-progress-text { color: var(--primary); font-size: 12px; font-weight: 800; letter-spacing: .04em; }
+/* Back and Next look like the site's outline and primary buttons, at the same size. */
+.lab-tour-popover .driver-popover-footer button { min-width: 80px; height: 36px; padding: 0 16px; text-align: center; border: 1px solid var(--outline); border-radius: var(--ui-button-radius, 8px); background: var(--surface-lowest); color: var(--ink); font: inherit; font-size: 14px; font-weight: 600; text-shadow: none; line-height: 1; }
+.lab-tour-popover .driver-popover-footer button:hover, .lab-tour-popover .driver-popover-footer button:focus-visible { background: var(--surface-container); }
+.lab-tour-popover .driver-popover-footer .driver-popover-next-btn { border-color: var(--ui-button-bg, var(--primary)); background: var(--ui-button-bg, var(--primary)); color: var(--ui-button-text, var(--primary-foreground)); }
+.lab-tour-popover .driver-popover-footer .driver-popover-next-btn:hover, .lab-tour-popover .driver-popover-footer .driver-popover-next-btn:focus-visible { background: var(--ui-button-focus-bg, var(--primary)); color: var(--ui-button-focus-text, var(--primary-foreground)); }
+html[data-interface-version="neubrutal"] .lab-tour-popover .driver-popover-footer button { border: 2px solid var(--ink); border-radius: 0; box-shadow: 3px 3px 0 var(--ink); }
+.lab-tour-popover .driver-popover-arrow-side-left { border-left-color: var(--surface-lowest); }
+.lab-tour-popover .driver-popover-arrow-side-right { border-right-color: var(--surface-lowest); }
+.lab-tour-popover .driver-popover-arrow-side-top { border-top-color: var(--surface-lowest); }
+.lab-tour-popover .driver-popover-arrow-side-bottom { border-bottom-color: var(--surface-lowest); }
+@media (prefers-reduced-motion: reduce) {
+  .lab-tour-popover .lab-tour-action::before { animation: none; }
+}
 @media (prefers-reduced-motion: reduce) {
   .lab-tour-ring, .lab-tour-action::before { animation: none; }
   .lab-tour-popover { transition: none; }

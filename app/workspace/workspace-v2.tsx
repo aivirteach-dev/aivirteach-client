@@ -25,8 +25,8 @@ import { hasTutorVersionMismatch, loadedTutorContext, tutorContextKey } from "./
 import { useCourseLearningSession } from "./use-course-learning-session";
 import { usePracticeTimer } from "./practice-time";
 import { EmbeddedCoursePage } from "./EmbeddedCoursePage";
-import { LabTour } from "./LabTour";
-import { hasSeenLabTour, labTourSteps, markLabTourSeen } from "./lab-tour-steps";
+import { createLabTour } from "./lab-tour";
+import { hasSeenLabTour, labTourSteps, markLabTourSeen, type LabTourState } from "./lab-tour-steps";
 import { embeddedCoursePage, serverLessonForSection } from "../lib/embedded-course";
 import { useChatMessages } from "./use-chat-messages";
 import { readTutorStream, TutorReplyNotSavedError } from "./read-tutor-stream";
@@ -283,6 +283,12 @@ export function WorkspaceV2() {
     shell.classList.add("is-resizing");
     document.body.style.cursor = "col-resize";
     document.body.style.userSelect = "none";
+    // A shield over the page keeps the lesson and VM iframes from taking the drag's pointer
+    // events. Turning pointer-events off on the iframes themselves instead can leave Chrome
+    // not sending wheel scrolls to the lesson afterwards until it is clicked.
+    const shield = document.createElement("div");
+    shield.className = "lab-v2-resize-shield";
+    document.body.appendChild(shield);
 
     function applyResize() {
       animationFrame = null;
@@ -304,6 +310,7 @@ export function WorkspaceV2() {
       window.removeEventListener("pointerup", stop);
       window.removeEventListener("pointercancel", stop);
       shell!.classList.remove("is-resizing");
+      shield.remove();
       document.body.style.cursor = "";
       document.body.style.userSelect = "";
       setLeftWidth(nextWidth);
@@ -485,19 +492,25 @@ export function WorkspaceV2() {
     return consoleViewerRef.current?.writeClipboard(text) ?? false;
   }, []);
 
-  // Guided tour: starts on a learner's first visit, and again from the ? button.
-  const [tourOpen, setTourOpen] = useState(false);
-  const [tourIndex, setTourIndex] = useState(0);
+  // Guided tour (driver.js): starts on a learner's first visit, and again from the ? button.
+  const vmPanel = vmPanelState(workspace?.status, consoleSession?.state === "ready" && Boolean(consoleSession.data));
+  const tourStateRef = useRef<LabTourState>({ vm: vmPanel });
+  useEffect(() => { tourStateRef.current = { vm: vmPanel }; }, [vmPanel]);
+  const tourRef = useRef<ReturnType<typeof createLabTour> | null>(null);
   const startTour = useCallback(() => {
     setActiveTab("path");
     setLayout("split");
-    setTourIndex(0);
-    setTourOpen(true);
-  }, []);
-  const closeTour = useCallback(() => {
-    markLabTourSeen();
-    setTourOpen(false);
-  }, []);
+    tourRef.current?.destroy();
+    // Let the Learning Path and split layout render before the first step measures them.
+    // (A timer rather than animation frames, which pause while the tab is in the background.)
+    window.setTimeout(() => {
+      const tr = (english: string, chinese: string) => localize(learningLanguage, english, chinese);
+      const tour = createLabTour({ t: tr, steps: labTourSteps(tr, () => tourStateRef.current), onClosed: markLabTourSeen });
+      tourRef.current = tour;
+      tour.drive();
+    }, 80);
+  }, [learningLanguage]);
+  useEffect(() => () => tourRef.current?.destroy(), []);
   const labReady = checked && !!course && !!enrollment;
   useEffect(() => {
     if (!labReady || hasSeenLabTour()) return;
@@ -510,7 +523,7 @@ export function WorkspaceV2() {
   }
 
   const frameStyle = { "--lab-v2-left-width": `${leftWidth}px` } as CSSProperties;
-  const panel = vmPanelState(workspace?.status, consoleSession?.state === "ready" && Boolean(consoleSession.data));
+  const panel = vmPanel;
 
   return (
     <div ref={shellRef} className={`lab-v2-shell ${layout === "maximized" ? "left-maximized" : layout === "minimized" ? "left-minimized" : ""}`} style={frameStyle}>
@@ -594,19 +607,6 @@ export function WorkspaceV2() {
         </button>
       </div>
 
-      {tourOpen && <LabTour
-        steps={labTourSteps(t, { activeTab, vm: panel, desktopStarted: consoleLoading || panel === "console" })}
-        index={tourIndex}
-        onIndexChange={setTourIndex}
-        onClose={closeTour}
-        labels={{
-          step: (current, total) => t(`Step ${current} of ${total}`, `第 ${current} 步，共 ${total} 步`),
-          back: t("Back", "上一步"),
-          next: t("Next", "下一步"),
-          skip: t("Skip tour", "跳过导览"),
-          finish: t("Done", "完成"),
-        }}
-      />}
     </div>
   );
 }

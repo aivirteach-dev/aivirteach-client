@@ -57,6 +57,9 @@ function siteThemeCss() {
   --v3-radius: ${neubrutal ? "0px" : "12px"};
 }
 html body.ui-v3 { font-family: ${font}; background: ${surface}; color: ${ink}; }
+/* The lesson still scrolls (wheel, touch, keys); only the page's own scrollbar is hidden. */
+html, body { scrollbar-width: none; }
+html::-webkit-scrollbar, body::-webkit-scrollbar { display: none; }
 `;
 }
 
